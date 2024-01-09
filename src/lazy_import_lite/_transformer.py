@@ -28,8 +28,8 @@ class TransformModuleImports(ast.NodeTransformer):
                         ),
                         args=[
                             ast.Name(id="__name__"),
-                            ast.Constant(value=node.module),
-                            ast.Constant(alias.name),
+                            ast.Constant(value=node.module, kind=None),
+                            ast.Constant(alias.name, kind=None),
                         ],
                         keywords=[],
                     ),
@@ -52,7 +52,7 @@ class TransformModuleImports(ast.NodeTransformer):
                         func=ast.Attribute(
                             value=ast.Name(id="__lazy_import_lite__"), attr="Import"
                         ),
-                        args=[ast.Constant(value=alias.name)],
+                        args=[ast.Constant(value=alias.name, kind=None)],
                         keywords=[],
                     ),
                 )
@@ -124,7 +124,7 @@ class TransformModuleImports(ast.NodeTransformer):
             ast.Import(
                 names=[
                     ast.alias(
-                        name="lazy_import_from._hooks", asname="__lazy_import_lite__"
+                        name="lazy_import_lite._hooks", asname="__lazy_import_lite__"
                     )
                 ]
             ),

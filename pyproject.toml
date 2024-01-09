@@ -19,7 +19,6 @@ classifiers = [
 ]
 
 dependencies = [
-    "inline-snapshot"
 ]
 description = 'PEP 690 like lazy imports for python'
 keywords = []
@@ -72,14 +71,16 @@ source_pkgs = ["lazy_import_lite", "tests"]
 scripts.test = "pytest {args:tests}"
 dependencies = [
   "pytest",
-  "inline-snapshot"
+  "inline-snapshot",
+    "astunparse"
 ]
 
 [tool.hatch.envs.all]
 dependencies = [
   "coverage[toml]>=6.5",
   "pytest",
-  "inline-snapshot"
+  "inline-snapshot",
+    "astunparse"
 ]
 scripts.test-cov = "coverage run -m pytest {args:tests}"
 
