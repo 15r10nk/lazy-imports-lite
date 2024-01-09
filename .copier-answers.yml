@@ -1,0 +1,18 @@
+# Changes here will be overwritten by Copier
+_commit: v0.0.3
+_src_path: https://github.com/15r10nk/project-template
+full_coverage: true
+github_user: 15r10nk
+insider_only: false
+module_name: lazy_import_lite
+project_description: PEP 690 like lazy imports for python
+project_main: true
+project_name: lazy-import-lite
+python_versions:
+- '3.8'
+- '3.9'
+- '3.10'
+- '3.11'
+- '3.12'
+show_project_logo: false
+use_mkdocs: true
