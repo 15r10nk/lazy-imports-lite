@@ -1,6 +1,7 @@
 import ast
 import re
 import subprocess as sp
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -8,7 +9,7 @@ from inline_snapshot import snapshot
 from lazy_import_lite._transformer import TransformModuleImports
 
 from ._utils import unparse
-import sys
+
 
 def check_transform(code, transformed_code, stdout, stderr):
     content = {
@@ -33,10 +34,10 @@ c='bar.foo.c'
         (dir / "script.py").write_text(code)
         result = sp.run([sys.executable, "script.py"], cwd=dir, capture_output=True)
 
-        def normalize_output(output:bytes):
-            text=output.decode()
-            text=text.replace(str(dir),"<dir>")
-            text=re.sub("at 0x[0-9a-f]*>","at <hex_value>>",text)
+        def normalize_output(output: bytes):
+            text = output.decode()
+            text = text.replace(str(dir), "<dir>")
+            text = re.sub("at 0x[0-9a-f]*>", "at <hex_value>>", text)
             return text
 
         assert stderr == normalize_output(result.stderr)
@@ -52,8 +53,7 @@ c='bar.foo.c'
         new_tree = ast.fix_missing_locations(transformer.visit(tree))
         new_code = unparse(new_tree)
 
-
-        if sys.version_info >= (3,9):
+        if sys.version_info >= (3, 9):
             # unparse does not produce the same code for 3.8
             assert new_code == transformed_code
 
@@ -71,7 +71,8 @@ if True:
     from x import y
     import z
     """,
-        snapshot("""\
+        snapshot(
+            """\
 import lazy_import_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
@@ -83,7 +84,8 @@ bar = __lazy_imports_lite__.Import('bar')
 if True:
     from x import y
     import z\
-"""),
+"""
+        ),
         snapshot(""),
         snapshot(""),
     )
@@ -97,12 +99,14 @@ from bar.foo import a
 print(a)
 
     """,
-        snapshot("""\
+        snapshot(
+            """\
 import lazy_import_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
 print(a.v)\
-"""),
+"""
+        ),
         snapshot(
             """\
 bar.foo.a
@@ -122,7 +126,8 @@ def f():
 
 print(f())
     """,
-        snapshot("""\
+        snapshot(
+            """\
 import lazy_import_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
@@ -130,7 +135,8 @@ a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
 def f():
     return a.v
 print(f())\
-"""),
+"""
+        ),
         snapshot(
             """\
 bar.foo.a
@@ -150,7 +156,8 @@ def f():
     return a
 print(f())
     """,
-        snapshot("""\
+        snapshot(
+            """\
 import lazy_import_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
@@ -159,7 +166,8 @@ def f():
     a = 5
     return a
 print(f())\
-"""),
+"""
+        ),
         snapshot(
             """\
 5
@@ -180,7 +188,8 @@ def f():
     return a
 print(f())
     """,
-        snapshot("""\
+        snapshot(
+            """\
 import lazy_import_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
@@ -190,7 +199,8 @@ def f():
     a.v = 5
     return a.v
 print(f())\
-"""),
+"""
+        ),
         snapshot(
             """\
 5
@@ -209,7 +219,8 @@ def f(a=5):
     return a
 print(f())
     """,
-        snapshot("""\
+        snapshot(
+            """\
 import lazy_import_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
@@ -217,7 +228,8 @@ a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
 def f(a=5):
     return a
 print(f())\
-"""),
+"""
+        ),
         snapshot(
             """\
 5
@@ -236,7 +248,8 @@ def f(b=a):
     return b
 print(f())
     """,
-        snapshot("""\
+        snapshot(
+            """\
 import lazy_import_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
@@ -244,7 +257,8 @@ a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
 def f(b=a.v):
     return b
 print(f())\
-"""),
+"""
+        ),
         snapshot(
             """\
 bar.foo.a
@@ -264,15 +278,18 @@ for e in sorted(globals().items()):
         print(*e)
 
     """,
-        snapshot("""\
+        snapshot(
+            """\
 import lazy_import_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
 for e in sorted(globals().items()):
     if e[0] != '__file__':
         print(*e)\
-"""),
-        snapshot("""\
+"""
+        ),
+        snapshot(
+            """\
 __annotations__ {}
 __builtins__ <module 'builtins' (built-in)>
 __cached__ None
@@ -282,9 +299,7 @@ __name__ __main__
 __package__ None
 __spec__ None
 a bar.foo.a
-"""),
+"""
+        ),
         snapshot(""),
     )
-
-
-

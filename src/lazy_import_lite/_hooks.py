@@ -31,9 +31,11 @@ class Import:
 
 
 def make_globals(global_provider):
-    
     def g():
-        return {k:v.v if isinstance(v,(ImportFrom,Import)) else v for k,v in global_provider().items() if k not in ("globals","__lazy_imports_lite__")}
+        return {
+            k: v.v if isinstance(v, (ImportFrom, Import)) else v
+            for k, v in global_provider().items()
+            if k not in ("globals", "__lazy_imports_lite__")
+        }
 
     return g
-
