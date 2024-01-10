@@ -78,8 +78,8 @@ globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
 b = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'b')
 d = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'c')
-baz = __lazy_imports_lite__.Import('bar')
-f = __lazy_imports_lite__.Import('bar.foo')
+baz = __lazy_imports_lite__.ImportAs('bar')
+f = __lazy_imports_lite__.ImportAs('bar.foo')
 bar = __lazy_imports_lite__.Import('bar')
 if True:
     from x import y
@@ -299,6 +299,83 @@ __name__ __main__
 __package__ None
 __spec__ None
 a bar.foo.a
+"""
+        ),
+        snapshot(""),
+    )
+
+
+def test_import():
+    check_transform(
+        """
+import bar
+print(bar.foo)
+import bar.foo
+
+print(bar.foo.a)
+    """,
+        snapshot(
+            """\
+import lazy_import_lite._hooks as __lazy_imports_lite__
+globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
+bar = __lazy_imports_lite__.Import('bar')
+print(bar.v.foo)
+bar = __lazy_imports_lite__.Import('bar.foo')
+print(bar.v.foo.a)\
+"""
+        ),
+        snapshot(
+            """\
+bar.foo
+bar.foo.a
+"""
+        ),
+        snapshot(""),
+    )
+
+    check_transform(
+        """
+import bar.foo
+import bar
+
+print(bar.foo.a)
+    """,
+        snapshot(
+            """\
+import lazy_import_lite._hooks as __lazy_imports_lite__
+globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
+bar = __lazy_imports_lite__.Import('bar.foo')
+bar = __lazy_imports_lite__.Import('bar')
+print(bar.v.foo.a)\
+"""
+        ),
+        snapshot(
+            """\
+bar.foo.a
+"""
+        ),
+        snapshot(""),
+    )
+
+
+def test_import_as():
+    check_transform(
+        """
+import bar.foo as f
+
+print(f.a)
+    """,
+        snapshot(
+            """\
+import lazy_import_lite._hooks as __lazy_imports_lite__
+globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
+f = __lazy_imports_lite__.ImportAs('bar.foo')
+print(f.v.a)\
+"""
+        ),
+        snapshot(
+            """\
+bar.foo.a
 """
         ),
         snapshot(""),

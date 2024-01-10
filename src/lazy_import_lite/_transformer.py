@@ -51,20 +51,38 @@ class TransformModuleImports(ast.NodeTransformer):
 
         new_nodes = []
         for alias in node.names:
-            name = alias.asname or alias.name.split(".")[-1]
-            new_nodes.append(
-                ast.Assign(
-                    targets=[ast.Name(id=name)],
-                    value=ast.Call(
-                        func=ast.Attribute(
-                            value=ast.Name(id="__lazy_imports_lite__"), attr="Import"
+            if alias.asname:
+                name = alias.asname
+                new_nodes.append(
+                    ast.Assign(
+                        targets=[ast.Name(id=name)],
+                        value=ast.Call(
+                            func=ast.Attribute(
+                                value=ast.Name(id="__lazy_imports_lite__"),
+                                attr="ImportAs",
+                            ),
+                            args=[ast.Constant(value=alias.name, kind=None)],
+                            keywords=[],
                         ),
-                        args=[ast.Constant(value=alias.name, kind=None)],
-                        keywords=[],
-                    ),
+                    )
                 )
-            )
-            self.transformed_imports.append(name)
+                self.transformed_imports.append(name)
+            else:
+                name = alias.name.split(".")[0]
+                new_nodes.append(
+                    ast.Assign(
+                        targets=[ast.Name(id=name)],
+                        value=ast.Call(
+                            func=ast.Attribute(
+                                value=ast.Name(id="__lazy_imports_lite__"),
+                                attr="Import",
+                            ),
+                            args=[ast.Constant(value=alias.name, kind=None)],
+                            keywords=[],
+                        ),
+                    )
+                )
+                self.transformed_imports.append(name)
 
         return new_nodes
 

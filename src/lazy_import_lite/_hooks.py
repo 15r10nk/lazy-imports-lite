@@ -1,4 +1,5 @@
 import importlib
+from collections import defaultdict
 
 
 class ImportFrom:
@@ -15,9 +16,40 @@ class ImportFrom:
             attr = getattr(module, self.name)
             self.v = attr
             return attr
+        else:
+            assert False
+
+
+pending_imports = defaultdict(list)
+imported_modules = set()
 
 
 class Import:
+    __slots__ = ("module", "v")
+
+    def __init__(self, module):
+        self.module = module
+        m = self.module.split(".")[0]
+
+        if m in imported_modules:
+            importlib.import_module(self.module)
+        else:
+            pending_imports[m].append(module)
+
+    def __getattr__(self, name):
+        if name == "v":
+            m = self.module.split(".")[0]
+            for pending in pending_imports[m]:
+                importlib.import_module(pending)
+            result = importlib.import_module(self.module.split(".")[0])
+            imported_modules.add(m)
+            self.v = result
+            return result
+        else:
+            assert False
+
+
+class ImportAs:
     __slots__ = ("module", "v")
 
     def __init__(self, module):
@@ -28,6 +60,8 @@ class Import:
             module = importlib.import_module(self.module)
             self.v = module
             return module
+        else:
+            assert False
 
 
 def make_globals(global_provider):
