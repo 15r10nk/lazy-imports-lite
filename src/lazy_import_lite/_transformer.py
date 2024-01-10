@@ -1,6 +1,13 @@
 import ast
 from typing import Any
 
+header="""
+import lazy_import_lite._hooks as __lazy_imports_lite__
+globals=__lazy_imports_lite__.make_globals(lambda g=globals:g())
+"""
+header_ast=ast.parse(header).body
+
+
 
 class TransformModuleImports(ast.NodeTransformer):
     def __init__(self):
@@ -24,7 +31,7 @@ class TransformModuleImports(ast.NodeTransformer):
                     targets=[ast.Name(id=name)],
                     value=ast.Call(
                         func=ast.Attribute(
-                            value=ast.Name(id="__lazy_import_lite__"), attr="ImportFrom"
+                            value=ast.Name(id="__lazy_imports_lite__"), attr="ImportFrom"
                         ),
                         args=[
                             ast.Name(id="__name__"),
@@ -50,7 +57,7 @@ class TransformModuleImports(ast.NodeTransformer):
                     targets=[ast.Name(id=name)],
                     value=ast.Call(
                         func=ast.Attribute(
-                            value=ast.Name(id="__lazy_import_lite__"), attr="Import"
+                            value=ast.Name(id="__lazy_imports_lite__"), attr="Import"
                         ),
                         args=[ast.Constant(value=alias.name, kind=None)],
                         keywords=[],
@@ -119,16 +126,7 @@ class TransformModuleImports(ast.NodeTransformer):
     def visit_Module(self, module: ast.Module) -> Any:
         module = self.generic_visit(module)
 
-        module.body.insert(
-            0,
-            ast.Import(
-                names=[
-                    ast.alias(
-                        name="lazy_import_lite._hooks", asname="__lazy_import_lite__"
-                    )
-                ]
-            ),
-        )
+        module.body[0:0]=header_ast
 
         while self.functions:
             f = self.functions.pop()

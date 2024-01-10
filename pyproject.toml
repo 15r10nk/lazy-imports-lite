@@ -60,12 +60,11 @@ exclude_lines = ["pragma: no cover", "assert False", "raise NotImplemented", "\\
 
 [tool.coverage.run]
 branch = true
-data_file = "$TOP/.coverage"
-omit = [
-  "src/lazy_import_lite/__about__.py"
-]
 parallel = true
+data_file = "$TOP/.coverage"
 source_pkgs = ["lazy_import_lite", "tests"]
+source=["src"]
+
 
 [tool.hatch.envs.default]
 scripts.test = "pytest {args:tests}"
@@ -78,10 +77,12 @@ dependencies = [
 [tool.hatch.envs.all]
 dependencies = [
   "coverage[toml]>=6.5",
+  "coverage-enable-subprocess",
   "pytest",
   "inline-snapshot",
     "astunparse"
 ]
+env-vars.TOP = "{root}"
 scripts.test-cov = "coverage run -m pytest {args:tests}"
 
 [[tool.hatch.envs.all.matrix]]
@@ -91,6 +92,7 @@ python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
 dependencies = ["coverage[toml]>=6.5"]
 detached = true
 env-vars.TOP = "{root}"
+env-vars.COVERAGE_PROCESS_START = "{root}/pyproject.toml"
 scripts.test = [
   "- coverage erase",
   "hatch run all:test-cov -- {args}",
