@@ -1,6 +1,7 @@
 import ast
 import importlib.abc
 import importlib.machinery
+import importlib.metadata
 import sys
 
 from ._transformer import TransformModuleImports
@@ -17,10 +18,20 @@ class Loader(importlib.abc.Loader, importlib.machinery.PathFinder):
             return None
 
         name = spec.name.split(".")[0]
-        if name == "inline_snapshot":
-            import importlib.metadata
 
-            keywords = importlib.metadata.metadata(name)["Keywords"].split(",")
+        if name != "lazy_imports_lite":
+            try:
+                metadata = importlib.metadata.metadata(name)
+            except importlib.metadata.PackageNotFoundError:
+                return None
+
+            if metadata is None:
+                return None
+
+            if metadata["Keywords"] is None:
+                return None
+
+            keywords = metadata["Keywords"].split(",")
             if "lazy-imports-lite-enabled" in keywords and spec.origin.endswith(".py"):
                 spec.loader = self
                 return spec

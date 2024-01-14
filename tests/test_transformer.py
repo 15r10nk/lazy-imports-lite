@@ -6,7 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from inline_snapshot import snapshot
-from lazy_import_lite._transformer import TransformModuleImports
+from lazy_imports_lite._transformer import TransformModuleImports
 
 from ._utils import unparse
 
@@ -74,7 +74,7 @@ if True:
     """,
         snapshot(
             """\
-import lazy_import_lite._hooks as __lazy_imports_lite__
+import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
 b = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'b')
@@ -102,7 +102,7 @@ print(a)
     """,
         snapshot(
             """\
-import lazy_import_lite._hooks as __lazy_imports_lite__
+import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
 print(a.v)\
@@ -129,7 +129,7 @@ print(f())
     """,
         snapshot(
             """\
-import lazy_import_lite._hooks as __lazy_imports_lite__
+import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
 
@@ -159,7 +159,7 @@ print(f())
     """,
         snapshot(
             """\
-import lazy_import_lite._hooks as __lazy_imports_lite__
+import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
 
@@ -191,7 +191,7 @@ print(f())
     """,
         snapshot(
             """\
-import lazy_import_lite._hooks as __lazy_imports_lite__
+import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
 
@@ -222,7 +222,7 @@ print(f())
     """,
         snapshot(
             """\
-import lazy_import_lite._hooks as __lazy_imports_lite__
+import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
 
@@ -251,7 +251,7 @@ print(f())
     """,
         snapshot(
             """\
-import lazy_import_lite._hooks as __lazy_imports_lite__
+import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
 
@@ -281,7 +281,7 @@ for e in sorted(globals().items()):
     """,
         snapshot(
             """\
-import lazy_import_lite._hooks as __lazy_imports_lite__
+import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
 for e in sorted(globals().items()):
@@ -317,7 +317,7 @@ print(bar.foo.a)
     """,
         snapshot(
             """\
-import lazy_import_lite._hooks as __lazy_imports_lite__
+import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 bar = __lazy_imports_lite__.Import('bar')
 print(bar.v.foo)
@@ -343,7 +343,7 @@ print(bar.foo.a)
     """,
         snapshot(
             """\
-import lazy_import_lite._hooks as __lazy_imports_lite__
+import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 bar = __lazy_imports_lite__.Import('bar.foo')
 bar = __lazy_imports_lite__.Import('bar')
@@ -368,7 +368,7 @@ print(f.a)
     """,
         snapshot(
             """\
-import lazy_import_lite._hooks as __lazy_imports_lite__
+import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 f = __lazy_imports_lite__.ImportAs('bar.foo')
 print(f.v.a)\
@@ -392,7 +392,7 @@ print((lambda:f.a)())
     """,
         snapshot(
             """\
-import lazy_import_lite._hooks as __lazy_imports_lite__
+import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 f = __lazy_imports_lite__.ImportAs('bar.foo')
 print((lambda: f.v.a)())\
@@ -422,7 +422,7 @@ asyncio.run(foo())
     """,
         snapshot(
             """\
-import lazy_import_lite._hooks as __lazy_imports_lite__
+import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 f = __lazy_imports_lite__.ImportAs('bar.foo')
 

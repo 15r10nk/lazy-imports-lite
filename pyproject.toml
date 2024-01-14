@@ -23,20 +23,20 @@ dependencies = [
 description = 'PEP 690 like lazy imports for python'
 keywords = []
 license = "MIT"
-name = "lazy-import-lite"
+name = "lazy-imports-lite"
 readme = "README.md"
 requires-python = ">=3.8"
 version="0.0.1"
 
 
 [project.scripts]
-lazy-import-lite = "lazy_import_lite.__main__:main"
+lazy-imports-lite = "lazy_imports_lite.__main__:main"
 
 
 [project.urls]
-Documentation = "https://github.com/15r10nk/lazy-import-lite#readme"
-Issues = "https://github.com/15r10nk/lazy-import-lite/issues"
-Source = "https://github.com/15r10nk/lazy-import-lite"
+Documentation = "https://github.com/15r10nk/lazy-imports-lite#readme"
+Issues = "https://github.com/15r10nk/lazy-imports-lite/issues"
+Source = "https://github.com/15r10nk/lazy-imports-lite"
 
 [tool.black]
 target-version = ["py38"]
@@ -47,13 +47,13 @@ major_version_zero = true
 tag_format = "v$major.$minor.$patch$prerelease"
 update_changelog_on_bump = true
 version_files = [
-  "src/lazy_import_lite/__init__.py:version"
+  "src/lazy_imports_lite/__init__.py:version"
 ]
 version_provider = "pep621"
 
 [tool.coverage.paths]
-lazy_import_lite = ["src/lazy_import_lite", "*/lazy-import-lite/src/lazy_import_lite"]
-tests = ["tests", "*/lazy-import-lite/tests"]
+lazy_imports_lite = ["src/lazy_imports_lite", "*/lazy-imports-lite/src/lazy_imports_lite"]
+tests = ["tests", "*/lazy-imports-lite/tests"]
 
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "assert False", "raise NotImplemented", "\\.\\.\\."]
@@ -62,9 +62,17 @@ exclude_lines = ["pragma: no cover", "assert False", "raise NotImplemented", "\\
 branch = true
 parallel = true
 data_file = "$TOP/.coverage"
-source_pkgs = ["lazy_import_lite", "tests"]
+source_pkgs = ["lazy_imports_lite", "tests"]
 source=["src"]
 
+
+[tool.hatch.build.targets.wheel.hooks.autorun]
+dependencies = ["hatch-autorun"]
+
+code = """
+from lazy_imports_lite._loader import setup
+setup()
+"""
 
 [tool.hatch.envs.default]
 scripts.test = "pytest {args:tests}"
@@ -111,4 +119,4 @@ dependencies = [
 scripts.serve = ["mkdocs serve {args}"]
 
 [tool.hatch.version]
-path = "src/lazy_import_lite/__init__.py"
+path = "src/lazy_imports_lite/__init__.py"

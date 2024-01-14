@@ -2,7 +2,7 @@ import ast
 from typing import Any
 
 header = """
-import lazy_import_lite._hooks as __lazy_imports_lite__
+import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals=__lazy_imports_lite__.make_globals(lambda g=globals:g())
 """
 header_ast = ast.parse(header).body
@@ -25,17 +25,20 @@ class TransformModuleImports(ast.NodeTransformer):
         new_nodes = []
         for alias in node.names:
             name = alias.asname or alias.name
+
+            module = "." * (node.level) + (node.module or "")
             new_nodes.append(
                 ast.Assign(
-                    targets=[ast.Name(id=name)],
+                    targets=[ast.Name(id=name, ctx=ast.Store())],
                     value=ast.Call(
                         func=ast.Attribute(
-                            value=ast.Name(id="__lazy_imports_lite__"),
+                            value=ast.Name(id="__lazy_imports_lite__", ctx=ast.Load()),
                             attr="ImportFrom",
+                            ctx=ast.Load(),
                         ),
                         args=[
-                            ast.Name(id="__name__"),
-                            ast.Constant(value=node.module, kind=None),
+                            ast.Name(id="__name__", ctx=ast.Load()),
+                            ast.Constant(value=module, kind=None),
                             ast.Constant(alias.name, kind=None),
                         ],
                         keywords=[],
@@ -55,11 +58,14 @@ class TransformModuleImports(ast.NodeTransformer):
                 name = alias.asname
                 new_nodes.append(
                     ast.Assign(
-                        targets=[ast.Name(id=name)],
+                        targets=[ast.Name(id=name, ctx=ast.Store())],
                         value=ast.Call(
                             func=ast.Attribute(
-                                value=ast.Name(id="__lazy_imports_lite__"),
+                                value=ast.Name(
+                                    id="__lazy_imports_lite__", ctx=ast.Load()
+                                ),
                                 attr="ImportAs",
+                                ctx=ast.Load(),
                             ),
                             args=[ast.Constant(value=alias.name, kind=None)],
                             keywords=[],
@@ -71,11 +77,14 @@ class TransformModuleImports(ast.NodeTransformer):
                 name = alias.name.split(".")[0]
                 new_nodes.append(
                     ast.Assign(
-                        targets=[ast.Name(id=name)],
+                        targets=[ast.Name(id=name, ctx=ast.Store())],
                         value=ast.Call(
                             func=ast.Attribute(
-                                value=ast.Name(id="__lazy_imports_lite__"),
+                                value=ast.Name(
+                                    id="__lazy_imports_lite__", ctx=ast.Load()
+                                ),
                                 attr="Import",
+                                ctx=ast.Load(),
                             ),
                             args=[ast.Constant(value=alias.name, kind=None)],
                             keywords=[],
@@ -137,7 +146,9 @@ class TransformModuleImports(ast.NodeTransformer):
             self.locals.add(node.id)
 
         if node.id in self.transformed_imports and node.id not in self.locals:
-            return ast.Attribute(value=node, attr="v")
+            old_ctx = node.ctx
+            node.ctx = ast.Load()
+            return ast.Attribute(value=node, attr="v", ctx=old_ctx)
         else:
             return node
 
