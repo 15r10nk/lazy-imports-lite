@@ -5,6 +5,7 @@ import importlib.metadata
 import os
 import sys
 import types
+from functools import lru_cache
 
 from ._hooks import LazyObject
 from ._transformer import TransformModuleImports
@@ -18,12 +19,33 @@ class LazyModule(types.ModuleType):
         return v
 
 
+@lru_cache
+def is_enabled_by_metadata(name):
+    if name != "lazy_imports_lite":
+        try:
+            metadata = importlib.metadata.metadata(name)
+        except importlib.metadata.PackageNotFoundError:
+            return False
+
+        if metadata is None:
+            return False
+
+        if metadata["Keywords"] is None:
+            return False
+
+        keywords = metadata["Keywords"].split(",")
+        if "lazy-imports-lite-enabled" in keywords:
+            return True
+
+    return False
+
+
 class Loader(importlib.abc.Loader, importlib.machinery.PathFinder):
     def find_spec(self, fullname, path=None, target=None):
-        spec = super().find_spec(fullname, path, target)
-
         if "LAZY_IMPORTS_LITE_DISABLE" in os.environ:
             return None
+
+        spec = super().find_spec(fullname, path, target)
 
         if spec is None:
             return None
@@ -33,22 +55,9 @@ class Loader(importlib.abc.Loader, importlib.machinery.PathFinder):
 
         name = spec.name.split(".")[0]
 
-        if name != "lazy_imports_lite":
-            try:
-                metadata = importlib.metadata.metadata(name)
-            except importlib.metadata.PackageNotFoundError:
-                return None
-
-            if metadata is None:
-                return None
-
-            if metadata["Keywords"] is None:
-                return None
-
-            keywords = metadata["Keywords"].split(",")
-            if "lazy-imports-lite-enabled" in keywords and spec.origin.endswith(".py"):
-                spec.loader = self
-                return spec
+        if is_enabled_by_metadata(name) and spec.origin.endswith(".py"):
+            spec.loader = self
+            return spec
 
         return None
 
@@ -66,6 +75,8 @@ class Loader(importlib.abc.Loader, importlib.machinery.PathFinder):
             ast.fix_missing_locations(new_ast)
         mod_code = compile(new_ast, origin, "exec")
         exec(mod_code, module.__dict__)
+        del module.__dict__["__lazy_imports_lite__"]
+        del module.__dict__["globals"]
 
 
 def setup():

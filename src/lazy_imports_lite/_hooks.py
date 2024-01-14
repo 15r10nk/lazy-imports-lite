@@ -16,7 +16,7 @@ class ImportFrom(LazyObject):
 
     def __getattr__(self, name):
         if name == "v":
-            module = importlib.import_module(self.module, self.package)
+            module = safe_import(self.module, self.package)
             attr = getattr(module, self.name)
             self.v = attr
             return attr
@@ -28,6 +28,17 @@ pending_imports = defaultdict(list)
 imported_modules = set()
 
 
+class LazyImportError(Exception):
+    pass
+
+
+def safe_import(module, package=None):
+    try:
+        return importlib.import_module(module, package)
+    except:
+        raise LazyImportError()
+
+
 class Import(LazyObject):
     __slots__ = ("module", "v")
 
@@ -36,7 +47,7 @@ class Import(LazyObject):
         m = self.module.split(".")[0]
 
         if m in imported_modules:
-            importlib.import_module(self.module)
+            safe_import(self.module)
         else:
             pending_imports[m].append(module)
 
@@ -44,8 +55,8 @@ class Import(LazyObject):
         if name == "v":
             m = self.module.split(".")[0]
             for pending in pending_imports[m]:
-                importlib.import_module(pending)
-            result = importlib.import_module(self.module.split(".")[0])
+                safe_import(pending)
+            result = safe_import(self.module.split(".")[0])
             imported_modules.add(m)
             self.v = result
             return result
@@ -61,7 +72,7 @@ class ImportAs(LazyObject):
 
     def __getattr__(self, name):
         if name == "v":
-            module = importlib.import_module(self.module)
+            module = safe_import(self.module)
             self.v = module
             return module
         else:
@@ -72,7 +83,7 @@ def make_globals(global_provider):
     def g():
         return {
             k: v.v if isinstance(v, LazyObject) else v
-            for k, v in global_provider().items()
+            for k, v in dict(global_provider()).items()
             if k not in ("globals", "__lazy_imports_lite__")
         }
 
