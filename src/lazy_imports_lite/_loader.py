@@ -3,8 +3,18 @@ import importlib.abc
 import importlib.machinery
 import importlib.metadata
 import sys
+import types
 
+from ._hooks import LazyObject
 from ._transformer import TransformModuleImports
+
+
+class LazyModule(types.ModuleType):
+    def __getattribute__(self, name):
+        v = super().__getattribute__(name)
+        if isinstance(v, LazyObject):
+            return v.v
+        return v
 
 
 class Loader(importlib.abc.Loader, importlib.machinery.PathFinder):
@@ -37,6 +47,9 @@ class Loader(importlib.abc.Loader, importlib.machinery.PathFinder):
                 return spec
 
         return None
+
+    def create_module(self, spec):
+        return LazyModule(spec.name)
 
     def exec_module(self, module):
         origin: str = module.__spec__.origin

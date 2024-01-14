@@ -2,7 +2,11 @@ import importlib
 from collections import defaultdict
 
 
-class ImportFrom:
+class LazyObject:
+    __slots__ = ("v",)
+
+
+class ImportFrom(LazyObject):
     __slots__ = ("package", "module", "name", "v")
 
     def __init__(self, package, module, name):
@@ -24,7 +28,7 @@ pending_imports = defaultdict(list)
 imported_modules = set()
 
 
-class Import:
+class Import(LazyObject):
     __slots__ = ("module", "v")
 
     def __init__(self, module):
@@ -49,7 +53,7 @@ class Import:
             assert False
 
 
-class ImportAs:
+class ImportAs(LazyObject):
     __slots__ = ("module", "v")
 
     def __init__(self, module):
@@ -67,7 +71,7 @@ class ImportAs:
 def make_globals(global_provider):
     def g():
         return {
-            k: v.v if isinstance(v, (ImportFrom, Import)) else v
+            k: v.v if isinstance(v, LazyObject) else v
             for k, v in global_provider().items()
             if k not in ("globals", "__lazy_imports_lite__")
         }

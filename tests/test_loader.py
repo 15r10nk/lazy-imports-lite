@@ -96,3 +96,50 @@ x: 5
         ),
         stderr=snapshot(""),
     )
+
+
+def test_lazy_module_attr():
+    check_script(
+        {
+            "pyproject.toml": """
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name="test-pck"
+keywords=["lazy-imports-lite-enabled"]
+version="0.0.1"
+""",
+            "test_pck/__init__.py": """\
+from .mx import x
+from .my import y
+
+""",
+            "test_pck/mx.py": """\
+print('imported mx')
+x=5
+""",
+            "test_pck/my.py": """\
+print('imported my')
+y=5
+""",
+        },
+        """\
+from test_pck import y
+print("y:",y)
+
+from test_pck import x
+print("x:",x)
+""",
+        stdout=snapshot(
+            """\
+imported my
+y: 5
+imported mx
+x: 5
+"""
+        ),
+        stderr=snapshot(""),
+    )
