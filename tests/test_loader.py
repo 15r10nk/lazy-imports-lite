@@ -1,3 +1,4 @@
+import os
 import subprocess
 import subprocess as sp
 import sys
@@ -36,7 +37,9 @@ def package(name, content):
         )
 
 
-def check_script(package_files, script, *, stdout="", stderr=""):
+def check_script(
+    package_files, script, *, stdout="", stderr="", normal_stdout="", normal_stderr=""
+):
     with package("test_pck", package_files), TemporaryDirectory() as d:
         d = Path(d)
 
@@ -46,6 +49,16 @@ def check_script(package_files, script, *, stdout="", stderr=""):
 
         assert result.stdout.decode() == stdout
         assert result.stderr.decode() == stderr
+
+        result = sp.run(
+            [sys.executable, "script.py"],
+            cwd=str(d),
+            env={**os.environ, "LAZY_IMPORTS_LITE_DISABLE": "True"},
+            capture_output=True,
+        )
+
+        assert result.stdout.decode() == normal_stdout
+        assert result.stderr.decode() == normal_stderr
 
 
 def test_loader():
@@ -95,6 +108,65 @@ x: 5
 """
         ),
         stderr=snapshot(""),
+        normal_stdout=snapshot(
+            """\
+imported mx
+imported my
+y: 5
+x: 5
+"""
+        ),
+        normal_stderr=snapshot(""),
+    )
+
+
+def test_loader_keywords():
+    check_script(
+        {
+            "pyproject.toml": """
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name="test-pck"
+keywords=["somekw","lazy-imports-lite-enabled","otherkw"]
+version="0.0.1"
+""",
+            "test_pck/__init__.py": """\
+from .mx import x
+print("imported init")
+
+def use_x():
+    return x
+
+""",
+            "test_pck/mx.py": """\
+print('imported mx')
+x=5
+""",
+        },
+        """\
+from test_pck import use_x
+print("x:",use_x())
+""",
+        stdout=snapshot(
+            """\
+imported init
+imported mx
+x: 5
+"""
+        ),
+        stderr=snapshot(""),
+        normal_stdout=snapshot(
+            """\
+imported mx
+imported init
+x: 5
+"""
+        ),
+        normal_stderr=snapshot(""),
     )
 
 
@@ -142,4 +214,13 @@ x: 5
 """
         ),
         stderr=snapshot(""),
+        normal_stdout=snapshot(
+            """\
+imported mx
+imported my
+y: 5
+x: 5
+"""
+        ),
+        normal_stderr=snapshot(""),
     )

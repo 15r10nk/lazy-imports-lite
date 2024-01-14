@@ -2,6 +2,7 @@ import ast
 import importlib.abc
 import importlib.machinery
 import importlib.metadata
+import os
 import sys
 import types
 
@@ -20,6 +21,9 @@ class LazyModule(types.ModuleType):
 class Loader(importlib.abc.Loader, importlib.machinery.PathFinder):
     def find_spec(self, fullname, path=None, target=None):
         spec = super().find_spec(fullname, path, target)
+
+        if "LAZY_IMPORTS_LITE_DISABLE" in os.environ:
+            return None
 
         if spec is None:
             return None
