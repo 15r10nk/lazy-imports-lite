@@ -52,6 +52,7 @@ c='bar.foo.c'
         tree = ast.parse(code)
         new_tree = ast.fix_missing_locations(transformer.visit(tree))
         new_code = unparse(new_tree)
+        new_code = new_code.replace("lambda :", "lambda:")
 
         if sys.version_info >= (3, 9):
             # unparse does not produce the same code for 3.8
@@ -371,6 +372,64 @@ import lazy_import_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 f = __lazy_imports_lite__.ImportAs('bar.foo')
 print(f.v.a)\
+"""
+        ),
+        snapshot(
+            """\
+bar.foo.a
+"""
+        ),
+        snapshot(""),
+    )
+
+
+def test_lambda():
+    check_transform(
+        """
+import bar.foo as f
+
+print((lambda:f.a)())
+    """,
+        snapshot(
+            """\
+import lazy_import_lite._hooks as __lazy_imports_lite__
+globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
+f = __lazy_imports_lite__.ImportAs('bar.foo')
+print((lambda: f.v.a)())\
+"""
+        ),
+        snapshot(
+            """\
+bar.foo.a
+"""
+        ),
+        snapshot(""),
+    )
+
+
+def test_async_function():
+    check_transform(
+        """
+import bar.foo as f
+
+async def foo():
+    print(f.a)
+
+import asyncio
+
+asyncio.run(foo())
+
+    """,
+        snapshot(
+            """\
+import lazy_import_lite._hooks as __lazy_imports_lite__
+globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
+f = __lazy_imports_lite__.ImportAs('bar.foo')
+
+async def foo():
+    print(f.v.a)
+asyncio = __lazy_imports_lite__.Import('asyncio')
+asyncio.v.run(foo())\
 """
         ),
         snapshot(
