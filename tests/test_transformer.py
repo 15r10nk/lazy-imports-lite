@@ -76,9 +76,9 @@ if True:
             """\
 import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
-b = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'b')
-d = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'c')
+a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
+b = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'b')
+d = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'c')
 baz = __lazy_imports_lite__.ImportAs('bar')
 f = __lazy_imports_lite__.ImportAs('bar.foo')
 bar = __lazy_imports_lite__.Import('bar')
@@ -104,7 +104,7 @@ print(a)
             """\
 import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
+a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
 print(a.v)\
 """
         ),
@@ -131,7 +131,7 @@ print(f())
             """\
 import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
+a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
 
 def f():
     return a.v
@@ -161,7 +161,7 @@ print(f())
             """\
 import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
+a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
 
 def f():
     a = 5
@@ -193,7 +193,7 @@ print(f())
             """\
 import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
+a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
 
 def f():
     global a
@@ -224,7 +224,7 @@ print(f())
             """\
 import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
+a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
 
 def f(a=5):
     return a
@@ -253,7 +253,7 @@ print(f())
             """\
 import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
+a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
 
 def f(b=a.v):
     return b
@@ -283,7 +283,7 @@ for e in sorted(globals().items()):
             """\
 import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__name__, 'bar.foo', 'a')
+a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
 for e in sorted(globals().items()):
     if e[0] != '__file__':
         print(*e)\

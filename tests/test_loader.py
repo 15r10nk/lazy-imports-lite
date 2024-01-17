@@ -327,18 +327,26 @@ later dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__',
     )
 
 
-def test_load_unknown_module():
+def test_load_chain_of_modules_with_error():
     check_script(
         {
             "test_pck/__init__.py": """\
-from .mx import x
-
+from .m import v
+""",
+            "test_pck/m/__init__.py": """\
+from .x import v
+""",
+            "test_pck/m/x.py": """\
+from .y import v
+""",
+            "test_pck/m/y.py": """\
+raise ValueError()
 """,
         },
         """\
-from lazy_imports_lite import LazyImportError
 try:
-    from test_pck import x
+    from test_pck import v
+    print(v)
 except BaseException as e:
     while e:
         print(f"{type(e).__name__}: {e}")
@@ -346,14 +354,14 @@ except BaseException as e:
 """,
         stdout=snapshot(
             """\
-LazyImportError: ⏎
-ModuleNotFoundError: No module named 'test_pck.mx'⏎
+LazyImportError: Deferred importing of module '.y' in 'test_pck.m' caused an error⏎
+ValueError: ⏎
 """
         ),
         stderr=snapshot("<equal to normal>"),
         normal_stdout=snapshot(
             """\
-ModuleNotFoundError: No module named 'test_pck.mx'
+ValueError: ⏎
 """
         ),
         normal_stderr=snapshot(""),

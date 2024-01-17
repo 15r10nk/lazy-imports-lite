@@ -6,6 +6,18 @@ class LazyObject:
     __slots__ = ("v",)
 
 
+class LazyImportError(BaseException):
+    def __init__(self, module, package):
+        self.module = module
+        self.package = package
+
+    def __str__(self):
+        if self.package is None:
+            return f"Deferred importing of module '{self.module}' caused an error"
+        else:
+            return f"Deferred importing of module '{self.module}' in '{self.package}' caused an error"
+
+
 class ImportFrom(LazyObject):
     __slots__ = ("package", "module", "name", "v")
 
@@ -31,15 +43,13 @@ pending_imports = defaultdict(list)
 imported_modules = set()
 
 
-class LazyImportError(Exception):
-    pass
-
-
 def safe_import(module, package=None):
     try:
         return importlib.import_module(module, package)
+    except LazyImportError:
+        raise
     except:
-        raise LazyImportError()
+        raise LazyImportError(module, package)
 
 
 class Import(LazyObject):

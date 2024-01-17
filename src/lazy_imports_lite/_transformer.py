@@ -40,7 +40,7 @@ class TransformModuleImports(ast.NodeTransformer):
                             ctx=ast.Load(),
                         ),
                         args=[
-                            ast.Name(id="__name__", ctx=ast.Load()),
+                            ast.Name(id="__package__", ctx=ast.Load()),
                             ast.Constant(value=module, kind=None),
                             ast.Constant(alias.name, kind=None),
                         ],
