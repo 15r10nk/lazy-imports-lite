@@ -17,7 +17,10 @@ class ImportFrom(LazyObject):
     def __getattr__(self, name):
         if name == "v":
             module = safe_import(self.module, self.package)
-            attr = getattr(module, self.name)
+            try:
+                attr = getattr(module, self.name)
+            except AttributeError:
+                attr = safe_import(self.module + "." + self.name, self.package)
             self.v = attr
             return attr
         else:

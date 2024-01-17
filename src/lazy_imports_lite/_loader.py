@@ -70,7 +70,10 @@ class Loader(importlib.abc.Loader, importlib.machinery.PathFinder):
             mod_raw = f.read()
             mod_ast = ast.parse(mod_raw, origin, "exec")
             transformer = TransformModuleImports()
-            new_ast = transformer.visit(mod_ast)
+            try:
+                new_ast = transformer.visit(mod_ast)
+            except:
+                raise ValueError(f"can not transform {origin}")
 
             ast.fix_missing_locations(new_ast)
         mod_code = compile(new_ast, origin, "exec")

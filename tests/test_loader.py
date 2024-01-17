@@ -43,12 +43,30 @@ def package(name, content):
 def check_script(
     package_files, script, *, stdout="", stderr="", normal_stdout="", normal_stderr=""
 ):
+    package_files = {
+        "pyproject.toml": """
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name="test-pck"
+keywords=["lazy-imports-lite-enabled"]
+version="0.0.1"
+""",
+        **package_files,
+    }
+
     def normalize_output(output: bytes):
         text = output.decode()
         text = text.replace(sys.exec_prefix, "<exec_prefix>")
         text = re.sub("at 0x[0-9a-f]*>", "at <hex_value>>", text)
+        text = re.sub("line [0-9]*", "line <n>", text)
         text = text.replace(python_version, "<python_version>")
         text = text.replace(str(script_dir), "<script_dir>")
+        if " \n" in text:
+            text = text.replace("\n", "⏎\n")
         return text
 
     with package("test_pck", package_files), TemporaryDirectory() as script_dir:
@@ -91,17 +109,6 @@ def check_script(
 def test_loader():
     check_script(
         {
-            "pyproject.toml": """
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[project]
-name="test-pck"
-keywords=["lazy-imports-lite-enabled"]
-version="0.0.1"
-""",
             "test_pck/__init__.py": """\
 from .mx import x
 from .my import y
@@ -150,17 +157,6 @@ x: 5
 def test_loader_keywords():
     check_script(
         {
-            "pyproject.toml": """
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[project]
-name="test-pck"
-keywords=["somekw","lazy-imports-lite-enabled","otherkw"]
-version="0.0.1"
-""",
             "test_pck/__init__.py": """\
 from .mx import x
 print("imported init")
@@ -200,17 +196,6 @@ x: 5
 def test_lazy_module_attr():
     check_script(
         {
-            "pyproject.toml": """
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[project]
-name="test-pck"
-keywords=["lazy-imports-lite-enabled"]
-version="0.0.1"
-""",
             "test_pck/__init__.py": """\
 from .mx import x
 from .my import y
@@ -256,17 +241,6 @@ x: 5
 def test_lazy_module_content():
     check_script(
         {
-            "pyproject.toml": """
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[project]
-name="test-pck"
-keywords=["lazy-imports-lite-enabled"]
-version="0.0.1"
-""",
             "test_pck/__init__.py": """\
 from .mx import x
 from .my import y
@@ -305,17 +279,6 @@ dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__pa
 def test_lazy_module_content_import_from():
     check_script(
         {
-            "pyproject.toml": """
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[project]
-name="test-pck"
-keywords=["lazy-imports-lite-enabled"]
-version="0.0.1"
-""",
             "test_pck/__init__.py": """\
 from .mx import x
 print("inside",globals().keys())
@@ -367,173 +330,60 @@ later dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__',
 def test_load_unknown_module():
     check_script(
         {
-            "pyproject.toml": """
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[project]
-name="test-pck"
-keywords=["lazy-imports-lite-enabled"]
-version="0.0.1"
-""",
             "test_pck/__init__.py": """\
 from .mx import x
 
 """,
         },
         """\
-from test_pck import x
-
-""",
-        stdout=snapshot("<equal to normal>"),
-        stderr=snapshot(
-            {
-                "python3.12": """\
-Traceback (most recent call last):
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_hooks.py", line 35, in safe_import
-    return importlib.import_module(module,package)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/frank/.local/share/hatch/env/virtual/.pythons/3.12/python/lib/<python_version>/importlib/__init__.py", line 90, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<frozen importlib._bootstrap>", line 1381, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1354, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1318, in _find_and_load_unlocked
-ModuleNotFoundError: No module named 'test_pck.mx'
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "<script_dir>/script.py", line 1, in <module>
+from lazy_imports_lite import LazyImportError
+try:
     from test_pck import x
-  File "<frozen importlib._bootstrap>", line 1406, in _handle_fromlist
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_loader.py", line 18, in __getattribute__
-    return v.v
-           ^^^
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_hooks.py", line 19, in __getattr__
-    module = safe_import(self.module, self.package)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_hooks.py", line 37, in safe_import
-    raise LazyImportError()
-lazy_imports_lite._hooks.LazyImportError
+except BaseException as e:
+    while e:
+        print(f"{type(e).__name__}: {e}")
+        e=e.__cause__ if e.__suppress_context__ else e.__context__
 """,
-                "python3.11": """\
-Traceback (most recent call last):
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_hooks.py", line 35, in safe_import
-    return importlib.import_module(module,package)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/frank/.pyenv/versions/3.11.0/lib/<python_version>/importlib/__init__.py", line 126, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<frozen importlib._bootstrap>", line 1206, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1178, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1142, in _find_and_load_unlocked
-ModuleNotFoundError: No module named 'test_pck.mx'
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "<script_dir>/script.py", line 1, in <module>
-    from test_pck import x
-  File "<frozen importlib._bootstrap>", line 1231, in _handle_fromlist
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_loader.py", line 18, in __getattribute__
-    return v.v
-           ^^^
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_hooks.py", line 19, in __getattr__
-    module = safe_import(self.module, self.package)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_hooks.py", line 37, in safe_import
-    raise LazyImportError()
-lazy_imports_lite._hooks.LazyImportError
-""",
-                "python3.10": """\
-Traceback (most recent call last):
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_hooks.py", line 35, in safe_import
-    return importlib.import_module(module,package)
-  File "/home/frank/.pyenv/versions/3.10.8/lib/<python_version>/importlib/__init__.py", line 126, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-  File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1004, in _find_and_load_unlocked
-ModuleNotFoundError: No module named 'test_pck.mx'
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "<script_dir>/script.py", line 1, in <module>
-    from test_pck import x
-  File "<frozen importlib._bootstrap>", line 1075, in _handle_fromlist
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_loader.py", line 18, in __getattribute__
-    return v.v
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_hooks.py", line 19, in __getattr__
-    module = safe_import(self.module, self.package)
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_hooks.py", line 37, in safe_import
-    raise LazyImportError()
-lazy_imports_lite._hooks.LazyImportError
-""",
-                "python3.9": """\
-Traceback (most recent call last):
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_hooks.py", line 35, in safe_import
-    return importlib.import_module(module,package)
-  File "/home/frank/.pyenv/versions/3.9.18/lib/<python_version>/importlib/__init__.py", line 127, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-  File "<frozen importlib._bootstrap>", line 1030, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1007, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 984, in _find_and_load_unlocked
-ModuleNotFoundError: No module named 'test_pck.mx'
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "<script_dir>/script.py", line 1, in <module>
-    from test_pck import x
-  File "<frozen importlib._bootstrap>", line 1055, in _handle_fromlist
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_loader.py", line 18, in __getattribute__
-    return v.v
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_hooks.py", line 19, in __getattr__
-    module = safe_import(self.module, self.package)
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_hooks.py", line 37, in safe_import
-    raise LazyImportError()
-lazy_imports_lite._hooks.LazyImportError
-""",
-                "python3.8": """\
-Traceback (most recent call last):
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_hooks.py", line 35, in safe_import
-    return importlib.import_module(module,package)
-  File "/home/frank/.pyenv/versions/3.8.16/lib/<python_version>/importlib/__init__.py", line 127, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 973, in _find_and_load_unlocked
-ModuleNotFoundError: No module named 'test_pck.mx'
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "<script_dir>/script.py", line 1, in <module>
-    from test_pck import x
-  File "<frozen importlib._bootstrap>", line 1039, in _handle_fromlist
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_loader.py", line 18, in __getattribute__
-    return v.v
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_hooks.py", line 19, in __getattr__
-    module = safe_import(self.module, self.package)
-  File "/home/frank/projects/lazy-imports-lite/src/lazy_imports_lite/_hooks.py", line 37, in safe_import
-    raise LazyImportError()
-lazy_imports_lite._hooks.LazyImportError
-""",
-            }
-        )[python_version],
-        normal_stdout=snapshot(""),
-        normal_stderr=snapshot(
+        stdout=snapshot(
             """\
-Traceback (most recent call last):
-  File "<script_dir>/script.py", line 1, in <module>
-    from test_pck import x
-  File "<exec_prefix>/lib/<python_version>/site-packages/test_pck/__init__.py", line 1, in <module>
-    from .mx import x
+LazyImportError: ⏎
+ModuleNotFoundError: No module named 'test_pck.mx'⏎
+"""
+        ),
+        stderr=snapshot("<equal to normal>"),
+        normal_stdout=snapshot(
+            """\
 ModuleNotFoundError: No module named 'test_pck.mx'
 """
         ),
+        normal_stderr=snapshot(""),
+    )
+
+
+def test_lazy_module_import_from_empty_init():
+    check_script(
+        {
+            "test_pck/__init__.py": """\
+""",
+            "test_pck/ma.py": """\
+a=5
+""",
+            "test_pck/mb.py": """\
+from test_pck import ma
+a=ma.a
+""",
+        },
+        """\
+from test_pck import mb
+
+print(mb.a)
+""",
+        stdout=snapshot("<equal to normal>"),
+        stderr=snapshot("<equal to normal>"),
+        normal_stdout=snapshot(
+            """\
+5
+"""
+        ),
+        normal_stderr=snapshot(""),
     )

@@ -22,6 +22,9 @@ class TransformModuleImports(ast.NodeTransformer):
         if self.context[-1] != "Module":
             return node
 
+        if node.module == "__future__":
+            return node
+
         new_nodes = []
         for alias in node.names:
             name = alias.asname or alias.name
@@ -154,9 +157,25 @@ class TransformModuleImports(ast.NodeTransformer):
 
     def visit_Module(self, module: ast.Module) -> Any:
         module = self.generic_visit(module)
+        assert len(self.context) == 0
 
-        module.body[0:0] = header_ast
+        pos = 0
 
+        def is_import_from_future(node):
+            return (
+                isinstance(node, ast.Expr)
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+                or isinstance(node, ast.ImportFrom)
+                and node.module == "__future__"
+            )
+
+        if module.body:
+            while is_import_from_future(module.body[pos]):
+                pos += 1
+        module.body[pos:pos] = header_ast
+
+        self.context = ["FunctionBody"]
         while self.functions:
             f = self.functions.pop()
             self.handle_function_body(f)

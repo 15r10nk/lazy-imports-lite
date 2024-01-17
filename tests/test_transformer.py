@@ -439,3 +439,32 @@ bar.foo.a
         ),
         snapshot(""),
     )
+
+
+def test_import_from_future():
+    check_transform(
+        """
+"doc string"
+from __future__ import annotations
+import bar.foo as f
+
+print(f.a)
+
+    """,
+        snapshot(
+            '''\
+"""doc string"""
+from __future__ import annotations
+import lazy_imports_lite._hooks as __lazy_imports_lite__
+globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
+f = __lazy_imports_lite__.ImportAs('bar.foo')
+print(f.v.a)\
+'''
+        ),
+        snapshot(
+            """\
+bar.foo.a
+"""
+        ),
+        snapshot(""),
+    )
