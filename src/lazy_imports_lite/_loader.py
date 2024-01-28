@@ -18,6 +18,17 @@ class LazyModule(types.ModuleType):
             return v.v
         return v
 
+    def __setattr__(self, name, value):
+        try:
+            v = super().__getattribute__(name)
+        except:
+            super().__setattr__(name, value)
+        else:
+            if isinstance(v, LazyObject):
+                v.v = value
+            else:
+                super().__setattr__(name, value)
+
 
 @lru_cache
 def is_enabled_by_metadata(name):

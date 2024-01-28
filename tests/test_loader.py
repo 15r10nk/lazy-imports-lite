@@ -395,3 +395,39 @@ print(mb.a)
         ),
         normal_stderr=snapshot(""),
     )
+
+
+def test_lazy_module_setattr():
+    check_script(
+        {
+            "test_pck/__init__.py": """\
+from .ma import b
+
+def foo():
+    print(b())
+
+""",
+            "test_pck/ma.py": """\
+def b():
+    return 5
+""",
+        },
+        """\
+from test_pck import foo
+import test_pck
+
+foo()
+test_pck.b=lambda:6
+foo()
+
+""",
+        stdout=snapshot("<equal to normal>"),
+        stderr=snapshot("<equal to normal>"),
+        normal_stdout=snapshot(
+            """\
+5
+6
+"""
+        ),
+        normal_stderr=snapshot(""),
+    )
