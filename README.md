@@ -14,22 +14,25 @@
 ## Installation
 
 
-This project is currently only available for insiders, which mean that you can get access to it if you sponsor me.
-You should then have access to [this repository](https://github.com:15r10nk-insiders/lazy-import-lite.git).
+You can install "lazy-import-lite" via [pip](https://pypi.org/project/pip/):
 
 ``` bash
-pip install git+ssh://git@github.com:15r10nk-insiders/lazy-import-lite.git@insiders
+pip install lazy-import-lite
 ```
 
 
 ## Key Features
 
-- **list** of features ...
+- lazy imports almost like [PEP 690](https://peps.python.org/pep-0690)
+- no code changes required
+- can be enabled per module
 
 
 ## Usage
 
-usage ...
+- add `lazy-import-lite` to your project dependencies
+- add lazy-imports-lite
+
 
 <!-- -8<- [start:Feedback] -->
 ## Issues
