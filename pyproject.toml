@@ -92,6 +92,7 @@ dependencies = [
 ]
 env-vars.TOP = "{root}"
 scripts.test-cov = "coverage run -m pytest {args:tests}"
+scripts.test = "pytest {args:tests}"
 
 [[tool.hatch.envs.all.matrix]]
 python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
@@ -101,13 +102,22 @@ dependencies = ["coverage[toml]>=6.5"]
 detached = true
 env-vars.TOP = "{root}"
 env-vars.COVERAGE_PROCESS_START = "{root}/pyproject.toml"
-scripts.test = [
+scripts.all = [
   "- coverage erase",
   "hatch run all:test-cov -- {args}",
   "coverage combine",
   "coverage html",
   "coverage report  --fail-under 100 "
 ]
+
+scripts.one = [
+  "- coverage erase",
+  "hatch run +py=3.12 all:test-cov -- {args}",
+  "coverage combine",
+  "coverage html",
+  "coverage report  --fail-under 100 "
+]
+
 
 
 [tool.hatch.envs.docs]
