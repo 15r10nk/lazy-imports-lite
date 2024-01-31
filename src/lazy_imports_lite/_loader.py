@@ -51,7 +51,7 @@ def is_enabled_by_metadata(name):
     return False
 
 
-class Loader(importlib.abc.Loader, importlib.machinery.PathFinder):
+class LazyLoader(importlib.abc.Loader, importlib.machinery.PathFinder):
     def find_spec(self, fullname, path=None, target=None):
         if "LAZY_IMPORTS_LITE_DISABLE" in os.environ:
             return None
@@ -91,5 +91,5 @@ class Loader(importlib.abc.Loader, importlib.machinery.PathFinder):
 
 
 def setup():
-    if not any(isinstance(m, Loader) for m in sys.meta_path):
-        sys.meta_path.insert(0, Loader())
+    if not any(isinstance(m, LazyLoader) for m in sys.meta_path):
+        sys.meta_path.insert(0, LazyLoader())

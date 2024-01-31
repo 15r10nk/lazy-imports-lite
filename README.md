@@ -54,13 +54,20 @@ How is it different to PEP 690?
     keywords=["lazy-imports-lite-enabled"]
   ```
 
-This enables deferred imports of all top level imports in your modules in your project.
-One way to verify if it is enabled is to check which loader is used
+This enables lazy imports for all top level imports in your modules in your project.
+One way to verify if it is enabled is to check which loader is used.
+
+``` pycon
+>>> import test_pck
+>>> print(type(test_pck.__spec__.loader))
+<class 'lazy_imports_lite._loader.LazyLoader'>
+```
 
 ## Implementation
 
-`lazy-imports-lite` works by rewriting the ast at runtime before the code is compiled.
+`lazy-imports-lite` works by rewriting the AST at runtime before the code is compiled.
 
+The following code:
 ``` python
 from foo import bar
 
@@ -73,10 +80,18 @@ def f():
 is internally transformed to:
 
 ``` python
+import lazy_imports_lite._hooks as __lazy_imports_lite__
 
+globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
+bar = __lazy_imports_lite__.ImportFrom(__package__, "foo", "bar")
+
+
+def f():
+    print(bar.v())
+    print(bar.v())
 ```
 
-This transformation should be never visible to you but it is good to know if something does not work as expected.
+This transformation should be never visible to you (the original source location is preserved) but it is good to know if something does not work as expected.
 
 You can view a preview of this transformation with `lazy-imports-lite preview <filename>`, if you want to know how your code would be changed.
 

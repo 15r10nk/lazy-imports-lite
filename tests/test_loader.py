@@ -471,3 +471,34 @@ foo()
         ),
         normal_stderr=snapshot(""),
     )
+
+
+def test_loader_is_used():
+    check_script(
+        {
+            "test_pck/__init__.py": """\
+
+def foo():
+    print("foo")
+
+""",
+        },
+        """\
+import test_pck
+
+print(type(test_pck.__spec__.loader))
+
+""",
+        transformed_stdout=snapshot(
+            """\
+<class 'lazy_imports_lite._loader.LazyLoader'>
+"""
+        ),
+        transformed_stderr=snapshot("<equal to normal>"),
+        normal_stdout=snapshot(
+            """\
+<class '_frozen_importlib_external.SourceFileLoader'>
+"""
+        ),
+        normal_stderr=snapshot(""),
+    )
