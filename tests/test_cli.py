@@ -1,8 +1,11 @@
 import subprocess as sp
+import sys
 
+import pytest
 from inline_snapshot import snapshot
 
 
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="3.8 unparses differently")
 def test_cli(tmp_path):
     file = tmp_path / "example.py"
 
@@ -29,3 +32,14 @@ def f():
     print(bar.v())
 """
     )
+
+
+def test_cli_invalid_args():
+    result = sp.run(["python", "-m", "lazy_imports_lite"], capture_output=True)
+    assert result.returncode == 1
+    assert result.stdout.decode() == snapshot(
+        """\
+Error: Please specify a valid subcommand. Use 'preview --help' for more information.
+"""
+    )
+    assert result.stderr.decode() == snapshot("")

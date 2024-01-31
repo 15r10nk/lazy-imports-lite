@@ -41,7 +41,13 @@ def package(name, content):
 
 
 def check_script(
-    package_files, script, *, stdout="", stderr="", normal_stdout="", normal_stderr=""
+    package_files,
+    script,
+    *,
+    transformed_stdout="",
+    transformed_stderr="",
+    normal_stdout="",
+    normal_stderr="",
 ):
     package_files = {
         "pyproject.toml": """
@@ -83,27 +89,24 @@ version="0.0.1"
             capture_output=True,
         )
 
-        result = sp.run(
+        transformed_result = sp.run(
             [sys.executable, str(script_file)], cwd=str(script_dir), capture_output=True
         )
+
         n_stdout = normalize_output(normal_result.stdout)
-        l_stdout = normalize_output(result.stdout)
+        t_stdout = normalize_output(transformed_result.stdout)
         n_stderr = normalize_output(normal_result.stderr)
-        l_stderr = normalize_output(result.stderr)
+        t_stderr = normalize_output(transformed_result.stderr)
 
-        if n_stdout == l_stdout:
-            assert n_stdout == normal_stdout
-            assert stdout == "<equal to normal>"
-        else:
-            assert n_stdout == normal_stdout
-            assert l_stdout == stdout
+        assert normal_stdout == n_stdout
+        assert transformed_stdout == (
+            "<equal to normal>" if n_stdout == t_stdout else t_stdout
+        )
 
-        if n_stderr == l_stderr:
-            assert n_stderr == normal_stderr
-            assert stderr == "<equal to normal>"
-        else:
-            assert n_stderr == normal_stderr
-            assert l_stderr == stderr
+        assert normal_stderr == n_stderr
+        assert transformed_stderr == (
+            "<equal to normal>" if n_stderr == t_stderr else t_stderr
+        )
 
 
 def test_loader():
@@ -133,7 +136,7 @@ from test_pck import use_x, use_y
 print("y:",use_y())
 print("x:",use_x())
 """,
-        stdout=snapshot(
+        transformed_stdout=snapshot(
             """\
 imported my
 y: 5
@@ -141,7 +144,7 @@ imported mx
 x: 5
 """
         ),
-        stderr=snapshot("<equal to normal>"),
+        transformed_stderr=snapshot("<equal to normal>"),
         normal_stdout=snapshot(
             """\
 imported mx
@@ -174,14 +177,14 @@ x=5
 from test_pck import use_x
 print("x:",use_x())
 """,
-        stdout=snapshot(
+        transformed_stdout=snapshot(
             """\
 imported init
 imported mx
 x: 5
 """
         ),
-        stderr=snapshot("<equal to normal>"),
+        transformed_stderr=snapshot("<equal to normal>"),
         normal_stdout=snapshot(
             """\
 imported mx
@@ -217,7 +220,7 @@ print("y:",y)
 from test_pck import x
 print("x:",x)
 """,
-        stdout=snapshot(
+        transformed_stdout=snapshot(
             """\
 imported my
 y: 5
@@ -225,7 +228,7 @@ imported mx
 x: 5
 """
         ),
-        stderr=snapshot("<equal to normal>"),
+        transformed_stderr=snapshot("<equal to normal>"),
         normal_stdout=snapshot(
             """\
 imported mx
@@ -259,13 +262,13 @@ import test_pck
 print(test_pck)
 print(vars(test_pck).keys())
 """,
-        stdout=snapshot(
+        transformed_stdout=snapshot(
             """\
 <module 'test_pck' from '<exec_prefix>/lib/<python_version>/site-packages/test_pck/__init__.py'>
 dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'x', 'y'])
 """
         ),
-        stderr=snapshot("<equal to normal>"),
+        transformed_stderr=snapshot("<equal to normal>"),
         normal_stdout=snapshot(
             """\
 <module 'test_pck' from '<exec_prefix>/lib/<python_version>/site-packages/test_pck/__init__.py'>
@@ -304,7 +307,7 @@ print("outside",vars(test_pck).keys())
 
 test_pck.later()
 """,
-        stdout=snapshot(
+        transformed_stdout=snapshot(
             """\
 inside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'x'])
 mx <module 'test_pck.mx' from '<exec_prefix>/lib/<python_version>/site-packages/test_pck/mx.py'>
@@ -313,7 +316,7 @@ outside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__
 later dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'x', 'mx', 'later'])
 """
         ),
-        stderr=snapshot("<equal to normal>"),
+        transformed_stderr=snapshot("<equal to normal>"),
         normal_stdout=snapshot(
             """\
 inside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'mx', 'x'])
@@ -321,6 +324,41 @@ mx <module 'test_pck.mx' from '<exec_prefix>/lib/<python_version>/site-packages/
 inside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'mx', 'x'])
 outside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'mx', 'x', 'later'])
 later dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'mx', 'x', 'later'])
+"""
+        ),
+        normal_stderr=snapshot(""),
+    )
+
+
+def test_import_module_with_error():
+    check_script(
+        {
+            "test_pck/__init__.py": """\
+import test_pck.m
+print(test_pck.m.v)
+""",
+            "test_pck/m.py": """\
+raise ValueError()
+""",
+        },
+        """\
+try:
+    from test_pck import v
+except BaseException as e:
+    while e:
+        print(f"{type(e).__name__}: {e}")
+        e=e.__cause__ if e.__suppress_context__ else e.__context__
+""",
+        transformed_stdout=snapshot(
+            """\
+LazyImportError: Deferred importing of module 'test_pck.m' caused an error⏎
+ValueError: ⏎
+"""
+        ),
+        transformed_stderr=snapshot("<equal to normal>"),
+        normal_stdout=snapshot(
+            """\
+ValueError: ⏎
 """
         ),
         normal_stderr=snapshot(""),
@@ -354,13 +392,13 @@ except BaseException as e:
         print(f"{type(e).__name__}: {e}")
         e=e.__cause__ if e.__suppress_context__ else e.__context__
 """,
-        stdout=snapshot(
+        transformed_stdout=snapshot(
             """\
 LazyImportError: Deferred importing of module '.y' in 'test_pck.m' caused an error⏎
 ValueError: ⏎
 """
         ),
-        stderr=snapshot("<equal to normal>"),
+        transformed_stderr=snapshot("<equal to normal>"),
         normal_stdout=snapshot(
             """\
 ValueError: ⏎
@@ -388,8 +426,8 @@ from test_pck import mb
 
 print(mb.a)
 """,
-        stdout=snapshot("<equal to normal>"),
-        stderr=snapshot("<equal to normal>"),
+        transformed_stdout=snapshot("<equal to normal>"),
+        transformed_stderr=snapshot("<equal to normal>"),
         normal_stdout=snapshot(
             """\
 5
@@ -423,8 +461,8 @@ test_pck.b=lambda:6
 foo()
 
 """,
-        stdout=snapshot("<equal to normal>"),
-        stderr=snapshot("<equal to normal>"),
+        transformed_stdout=snapshot("<equal to normal>"),
+        transformed_stderr=snapshot("<equal to normal>"),
         normal_stdout=snapshot(
             """\
 5

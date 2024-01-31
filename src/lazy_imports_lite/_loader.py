@@ -39,7 +39,7 @@ def is_enabled_by_metadata(name):
             return False
 
         if metadata is None:
-            return False
+            return False  # pragma: no cover
 
         if metadata["Keywords"] is None:
             return False
@@ -62,7 +62,7 @@ class Loader(importlib.abc.Loader, importlib.machinery.PathFinder):
             return None
 
         if spec.origin is None:
-            return None
+            return None  # pragma: no cover
 
         name = spec.name.split(".")[0]
 
@@ -81,10 +81,7 @@ class Loader(importlib.abc.Loader, importlib.machinery.PathFinder):
             mod_raw = f.read()
             mod_ast = ast.parse(mod_raw, origin, "exec")
             transformer = TransformModuleImports()
-            try:
-                new_ast = transformer.visit(mod_ast)
-            except:
-                raise ValueError(f"can not transform {origin}")
+            new_ast = transformer.visit(mod_ast)
 
             ast.fix_missing_locations(new_ast)
         mod_code = compile(new_ast, origin, "exec")

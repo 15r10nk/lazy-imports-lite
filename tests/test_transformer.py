@@ -467,3 +467,93 @@ bar.foo.a
         ),
         snapshot(""),
     )
+
+
+def test_transform_default_argument():
+    check_transform(
+        """
+"doc string"
+from __future__ import annotations
+import bar.foo as f
+
+def foo(a=lambda:f.a):
+    print(a())
+foo()
+
+    """,
+        snapshot(
+            '''\
+"""doc string"""
+from __future__ import annotations
+import lazy_imports_lite._hooks as __lazy_imports_lite__
+globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
+f = __lazy_imports_lite__.ImportAs('bar.foo')
+
+def foo(a=lambda: f.v.a):
+    print(a())
+foo()\
+'''
+        ),
+        snapshot(
+            """\
+bar.foo.a
+"""
+        ),
+        snapshot(""),
+    )
+
+
+def test_transform_decorators():
+    check_transform(
+        """
+"doc string"
+from __future__ import annotations
+import bar.foo as f
+
+def deco(thing):
+    def w(f):
+        print("in w",thing.a)
+        return f
+    return w
+
+
+@deco(f)
+def foo():
+    print("in f",f.a)
+
+print("call")
+
+foo()
+
+    """,
+        snapshot(
+            '''\
+"""doc string"""
+from __future__ import annotations
+import lazy_imports_lite._hooks as __lazy_imports_lite__
+globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
+f = __lazy_imports_lite__.ImportAs('bar.foo')
+
+def deco(thing):
+
+    def w(f):
+        print('in w', thing.a)
+        return f
+    return w
+
+@deco(f.v)
+def foo():
+    print('in f', f.v.a)
+print('call')
+foo()\
+'''
+        ),
+        snapshot(
+            """\
+in w bar.foo.a
+call
+in f bar.foo.a
+"""
+        ),
+        snapshot(""),
+    )

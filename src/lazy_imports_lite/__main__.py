@@ -34,6 +34,7 @@ def main():
         print(
             "Error: Please specify a valid subcommand. Use 'preview --help' for more information."
         )
+        exit(1)
 
 
 if __name__ == "__main__":
