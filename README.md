@@ -66,7 +66,6 @@ from foo import bar
 
 def f():
     print(bar())
-    print(bar())
 ```
 
 is internally transformed to:
@@ -80,13 +79,17 @@ bar = __lazy_imports_lite__.ImportFrom(__package__, "foo", "bar")
 
 def f():
     print(bar.v())
-    print(bar.v())
 ```
 
 This transformation should be never visible to you (the original source location is preserved) but it is good to know if something does not work as expected.
 
 You can view a preview of this transformation with `lazy-imports-lite preview <filename>`, if you want to know how your code would be changed.
 
+## TODO
+
+- [ ] windows support
+- [ ] handle exec/eval
+- [ ] mutable `globals()`
 
 <!-- -8<- [start:Feedback] -->
 ## Issues
