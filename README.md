@@ -11,25 +11,18 @@
 
 <!-- -8<- [end:Header] -->
 
-**lazy-imports-lite** changes the semantics of python imports and defers the import until it is used the first time.
+**lazy-imports-lite** changes the semantics of python imports and defers the import until it is used the first time like in [PEP 690](https://peps.python.org/pep-0690).
 
-It is also important to note that this project is not affiliated in any way with the original PEP.
 I liked the idea of lazy-imports and wanted to use them for my projects without having to change my code.
-I hope that this project makes it possible to collect knowledge about
+I hope this project allows more people to use lazy-imports in their projects.
 
+> [!NOTE]
+> It is important to note that this project is not affiliated in any way with the original PEP.
+> I hope this project allows a wider adoption of lazy-imports, but there is currently no plan to standardize it.
 
 > [!IMPORTANT]
 > **lazy-imports-lite** is still in early development and may contain bugs.
 > Make sure that to test your code carefully before you use it.
-
-## Installation
-
-
-You can install "lazy-imports-lite" via [pip](https://pypi.org/project/pip/):
-
-``` bash
-pip install lazy-imports-lite
-```
 
 
 ## Key Features
@@ -47,9 +40,8 @@ How is it different to PEP 690?
 ## Usage
 
 - add `lazy-imports-lite` to your project dependencies.
-- add lazy-imports-lite-enabled to the keywords of your project.
+- add lazy-imports-lite-enabled to the keywords of your `pyproject.toml`.
   ```
-    #pyproject.toml
     [project]
     keywords=["lazy-imports-lite-enabled"]
   ```
@@ -58,8 +50,8 @@ This enables lazy imports for all top level imports in your modules in your proj
 One way to verify if it is enabled is to check which loader is used.
 
 ``` pycon
->>> import test_pck
->>> print(type(test_pck.__spec__.loader))
+>>> import your_project
+>>> print(type(your_project.__spec__.loader))
 <class 'lazy_imports_lite._loader.LazyLoader'>
 ```
 
