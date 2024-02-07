@@ -88,11 +88,14 @@ dependencies = [
   "coverage-enable-subprocess",
   "pytest",
   "inline-snapshot",
-    "astunparse"
+    "astunparse",
+  "mypy",
 ]
 env-vars.TOP = "{root}"
 scripts.test-cov = "coverage run -m pytest {args:tests}"
 scripts.test = "pytest {args:tests}"
+scripts.test-mypy = "mypy src tests"
+
 
 [[tool.hatch.envs.all.matrix]]
 python = ["3.8", "3.9", "3.10", "3.11", "3.12"]

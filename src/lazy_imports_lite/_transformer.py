@@ -1,4 +1,5 @@
 import ast
+import typing
 from typing import Any
 
 header = """
@@ -156,7 +157,7 @@ class TransformModuleImports(ast.NodeTransformer):
             return node
 
     def visit_Module(self, module: ast.Module) -> Any:
-        module = self.generic_visit(module)
+        module = typing.cast(ast.Module, self.generic_visit(module))
         assert len(self.context) == 0
 
         pos = 0
