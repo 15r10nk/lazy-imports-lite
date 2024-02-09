@@ -53,6 +53,10 @@ def is_enabled_by_metadata(name):
 
 class LazyLoader(importlib.abc.Loader, importlib.machinery.PathFinder):
     def find_spec(self, fullname, path=None, target=None):
+        if fullname.startswith("encodings."):
+            # fix wired windows bug
+            return None
+
         if "LAZY_IMPORTS_LITE_DISABLE" in os.environ:
             return None
 

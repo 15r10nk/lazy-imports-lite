@@ -3,6 +3,7 @@ import re
 import subprocess
 import subprocess as sp
 import sys
+import typing
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -66,8 +67,17 @@ version="0.0.1"
 
     def normalize_output(output: bytes):
         text = output.decode()
-        text = text.replace(sys.exec_prefix, "<exec_prefix>")
-        text = re.sub("at 0x[0-9a-f]*>", "at <hex_value>>", text)
+        text = text.replace("\r\n", "\n")
+
+        prefix = re.escape(sys.exec_prefix.replace("\\", "\\\\"))
+        backslash = "\\"
+        text = re.sub(
+            f"'{prefix}[^']*site-packages([^']*)'",
+            lambda m: f"'<exec_prefix>{typing.cast(str,m[1]).replace(backslash*2,'/')}'",
+            text,
+        )
+
+        text = re.sub("at 0x[0-9a-fA-F]*>", "at <hex_value>>", text)
         text = re.sub("line [0-9]*", "line <n>", text)
         text = text.replace(python_version, "<python_version>")
         text = text.replace(str(script_dir), "<script_dir>")
@@ -264,14 +274,14 @@ print(vars(test_pck).keys())
 """,
         transformed_stdout=snapshot(
             """\
-<module 'test_pck' from '<exec_prefix>/lib/<python_version>/site-packages/test_pck/__init__.py'>
+<module 'test_pck' from '<exec_prefix>/test_pck/__init__.py'>
 dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'x', 'y'])
 """
         ),
         transformed_stderr=snapshot("<equal to normal>"),
         normal_stdout=snapshot(
             """\
-<module 'test_pck' from '<exec_prefix>/lib/<python_version>/site-packages/test_pck/__init__.py'>
+<module 'test_pck' from '<exec_prefix>/test_pck/__init__.py'>
 dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'mx', 'x', 'my', 'y'])
 """
         ),
@@ -310,7 +320,7 @@ test_pck.later()
         transformed_stdout=snapshot(
             """\
 inside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'x'])
-mx <module 'test_pck.mx' from '<exec_prefix>/lib/<python_version>/site-packages/test_pck/mx.py'>
+mx <module 'test_pck.mx' from '<exec_prefix>/test_pck/mx.py'>
 inside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'x', 'mx'])
 outside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'x', 'mx', 'later'])
 later dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'x', 'mx', 'later'])
@@ -320,7 +330,7 @@ later dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__',
         normal_stdout=snapshot(
             """\
 inside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'mx', 'x'])
-mx <module 'test_pck.mx' from '<exec_prefix>/lib/<python_version>/site-packages/test_pck/mx.py'>
+mx <module 'test_pck.mx' from '<exec_prefix>/test_pck/mx.py'>
 inside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'mx', 'x'])
 outside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'mx', 'x', 'later'])
 later dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'mx', 'x', 'later'])

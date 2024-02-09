@@ -1,6 +1,7 @@
 import argparse
 import ast
 import pathlib
+import sys
 
 from lazy_imports_lite._transformer import TransformModuleImports
 from lazy_imports_lite._utils import unparse
@@ -32,7 +33,8 @@ def main():
 
     else:
         print(
-            "Error: Please specify a valid subcommand. Use 'preview --help' for more information."
+            "Error: Please specify a valid subcommand. Use 'preview --help' for more information.",
+            file=sys.stderr,
         )
         exit(1)
 

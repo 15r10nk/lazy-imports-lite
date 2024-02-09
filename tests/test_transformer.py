@@ -35,8 +35,9 @@ c='bar.foo.c'
 
         def normalize_output(output: bytes):
             text = output.decode()
+            text = text.replace("\r\n", "\n")
             text = text.replace(str(dir), "<dir>")
-            text = re.sub("at 0x[0-9a-f]*>", "at <hex_value>>", text)
+            text = re.sub("at 0x[0-9a-fA-F]*>", "at <hex_value>>", text)
             return text
 
         assert stderr == normalize_output(result.stderr)
