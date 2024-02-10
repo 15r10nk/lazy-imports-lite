@@ -5,6 +5,7 @@ import subprocess as sp
 import sys
 import typing
 from contextlib import contextmanager
+from contextlib import ExitStack
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -21,7 +22,22 @@ def write_files(dir, content):
 
 
 @contextmanager
-def package(name, content):
+def package(name, content, extra_config=""):
+    content = {
+        "pyproject.toml": f"""
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name="{name}"
+keywords=["lazy-imports-lite-enabled"]
+version="0.0.1"
+"""
+        + extra_config,
+        **content,
+    }
     with TemporaryDirectory() as d:
         package_dir = Path(d) / name
         package_dir.mkdir()
@@ -42,7 +58,7 @@ def package(name, content):
 
 
 def check_script(
-    package_files,
+    packages,
     script,
     *,
     transformed_stdout="",
@@ -50,21 +66,6 @@ def check_script(
     normal_stdout="",
     normal_stderr="",
 ):
-    package_files = {
-        "pyproject.toml": """
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[project]
-name="test-pck"
-keywords=["lazy-imports-lite-enabled"]
-version="0.0.1"
-""",
-        **package_files,
-    }
-
     def normalize_output(output: bytes):
         text = output.decode()
         text = text.replace("\r\n", "\n")
@@ -85,7 +86,15 @@ version="0.0.1"
             text = text.replace("\n", "⏎\n")
         return text
 
-    with package("test_pck", package_files), TemporaryDirectory() as script_dir:
+    if not isinstance(packages, list):
+        packages = [packages]
+
+    packages = [package("test_pck", p) if isinstance(p, dict) else p for p in packages]
+
+    with ExitStack() as cm, TemporaryDirectory() as script_dir:
+        for p in packages:
+            cm.enter_context(p)
+
         print(sys.exec_prefix)
         script_dir = Path(script_dir)
 
@@ -493,6 +502,44 @@ def foo():
 
 """,
         },
+        """\
+import test_pck
+
+print(type(test_pck.__spec__.loader))
+
+""",
+        transformed_stdout=snapshot(
+            """\
+<class 'lazy_imports_lite._loader.LazyLoader'>
+"""
+        ),
+        transformed_stderr=snapshot("<equal to normal>"),
+        normal_stdout=snapshot(
+            """\
+<class '_frozen_importlib_external.SourceFileLoader'>
+"""
+        ),
+        normal_stderr=snapshot(""),
+    )
+
+
+def test_different_package_and_project_name():
+    check_script(
+        package(
+            "py-test-pck",
+            {
+                "source/test_pck/__init__.py": """\
+
+def foo():
+    print("foo")
+
+""",
+            },
+            extra_config="""
+[tool.hatch.build.targets.wheel]
+packages = ["source/test_pck"]
+""",
+        ),
         """\
 import test_pck
 

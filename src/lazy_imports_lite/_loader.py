@@ -31,24 +31,43 @@ class LazyModule(types.ModuleType):
 
 
 @lru_cache
+def packages_distributions():
+    return importlib.metadata.packages_distributions()
+
+
+@lru_cache
 def is_enabled_by_metadata(name):
-    if name != "lazy_imports_lite":
-        try:
-            metadata = importlib.metadata.metadata(name)
-        except importlib.metadata.PackageNotFoundError:
-            return False
+    if name == "lazy_imports_lite":
+        return False
 
-        if metadata is None:
-            return False  # pragma: no cover
+    package_to_distribution = packages_distributions()
 
-        if metadata["Keywords"] is None:
-            return False
+    if name not in package_to_distribution:
+        return False
 
-        keywords = metadata["Keywords"].split(",")
-        if "lazy-imports-lite-enabled" in keywords:
-            return True
+    names = list(set(package_to_distribution[name]))
 
-    return False
+    assert isinstance(names, list)
+
+    if len(names) != 1:
+        return False
+
+    name = names[0]
+
+    try:
+        metadata = importlib.metadata.metadata(name)
+    except importlib.metadata.PackageNotFoundError:
+        return False
+
+    if metadata is None:
+        return False  # pragma: no cover
+
+    if metadata["Keywords"] is None:
+        return False
+
+    keywords = metadata["Keywords"].split(",")
+    if "lazy-imports-lite-enabled" in keywords:
+        return True
 
 
 class LazyLoader(importlib.abc.Loader, importlib.machinery.PathFinder):
@@ -95,5 +114,8 @@ class LazyLoader(importlib.abc.Loader, importlib.machinery.PathFinder):
 
 
 def setup():
+    # prevent some cyclic imports
+    pass
+
     if not any(isinstance(m, LazyLoader) for m in sys.meta_path):
         sys.meta_path.insert(0, LazyLoader())
