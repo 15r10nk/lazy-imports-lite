@@ -33,7 +33,7 @@ I hope this project allows more people to use lazy-imports in their projects.
 
 How is it different to PEP 690?
 
-- It has not the same performance like the implementation from the pep. Every access to parts of imported modules is transformed to an attribute access `x` -> `x.v`.
+- It has not the same performance like the implementation from the pep. Every access to parts of imported modules is transformed to an attribute access `x` -> `x._lazy_value`.
 - Exceptions during deferred import are converted to `LazyImportError`
 
 
@@ -78,7 +78,7 @@ bar = __lazy_imports_lite__.ImportFrom(__package__, "foo", "bar")
 
 
 def f():
-    print(bar.v())
+    print(bar._lazy_value())
 ```
 
 This transformation should be never visible to you (the original source location is preserved) but it is good to know if something does not work as expected.

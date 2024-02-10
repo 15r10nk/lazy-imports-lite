@@ -105,7 +105,7 @@ print(a)
 import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
-print(a.v)\
+print(a._lazy_value)\
 """
         ),
         snapshot(
@@ -134,7 +134,7 @@ globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
 
 def f():
-    return a.v
+    return a._lazy_value
 print(f())\
 """
         ),
@@ -197,8 +197,8 @@ a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
 
 def f():
     global a
-    a.v = 5
-    return a.v
+    a._lazy_value = 5
+    return a._lazy_value
 print(f())\
 """
         ),
@@ -255,7 +255,7 @@ import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
 
-def f(b=a.v):
+def f(b=a._lazy_value):
     return b
 print(f())\
 """
@@ -320,9 +320,9 @@ print(bar.foo.a)
 import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 bar = __lazy_imports_lite__.Import('bar')
-print(bar.v.foo)
+print(bar._lazy_value.foo)
 bar = __lazy_imports_lite__.Import('bar.foo')
-print(bar.v.foo.a)\
+print(bar._lazy_value.foo.a)\
 """
         ),
         snapshot(
@@ -347,7 +347,7 @@ import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 bar = __lazy_imports_lite__.Import('bar.foo')
 bar = __lazy_imports_lite__.Import('bar')
-print(bar.v.foo.a)\
+print(bar._lazy_value.foo.a)\
 """
         ),
         snapshot(
@@ -371,7 +371,7 @@ print(f.a)
 import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 f = __lazy_imports_lite__.ImportAs('bar.foo')
-print(f.v.a)\
+print(f._lazy_value.a)\
 """
         ),
         snapshot(
@@ -395,7 +395,7 @@ print((lambda:f.a)())
 import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 f = __lazy_imports_lite__.ImportAs('bar.foo')
-print((lambda: f.v.a)())\
+print((lambda: f._lazy_value.a)())\
 """
         ),
         snapshot(
@@ -427,9 +427,9 @@ globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 f = __lazy_imports_lite__.ImportAs('bar.foo')
 
 async def foo():
-    print(f.v.a)
+    print(f._lazy_value.a)
 asyncio = __lazy_imports_lite__.Import('asyncio')
-asyncio.v.run(foo())\
+asyncio._lazy_value.run(foo())\
 """
         ),
         snapshot(
@@ -458,7 +458,7 @@ from __future__ import annotations
 import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 f = __lazy_imports_lite__.ImportAs('bar.foo')
-print(f.v.a)\
+print(f._lazy_value.a)\
 '''
         ),
         snapshot(
@@ -490,7 +490,7 @@ import lazy_imports_lite._hooks as __lazy_imports_lite__
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 f = __lazy_imports_lite__.ImportAs('bar.foo')
 
-def foo(a=lambda: f.v.a):
+def foo(a=lambda: f._lazy_value.a):
     print(a())
 foo()\
 '''
@@ -542,9 +542,9 @@ def deco(thing):
         return f
     return w
 
-@deco(f.v)
+@deco(f._lazy_value)
 def foo():
-    print('in f', f.v.a)
+    print('in f', f._lazy_value.a)
 print('call')
 foo()\
 '''

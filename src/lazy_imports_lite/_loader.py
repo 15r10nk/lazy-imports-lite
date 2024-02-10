@@ -13,19 +13,19 @@ from ._transformer import TransformModuleImports
 
 class LazyModule(types.ModuleType):
     def __getattribute__(self, name):
-        v = super().__getattribute__(name)
-        if isinstance(v, LazyObject):
-            return v.v
-        return v
+        value = super().__getattribute__(name)
+        if isinstance(value, LazyObject):
+            return value._lazy_value
+        return value
 
     def __setattr__(self, name, value):
         try:
-            v = super().__getattribute__(name)
+            current_value = super().__getattribute__(name)
         except:
             super().__setattr__(name, value)
         else:
-            if isinstance(v, LazyObject):
-                v.v = value
+            if isinstance(current_value, LazyObject):
+                current_value._lazy_value = value
             else:
                 super().__setattr__(name, value)
 

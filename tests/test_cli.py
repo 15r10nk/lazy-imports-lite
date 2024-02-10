@@ -28,8 +28,8 @@ globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
 bar = __lazy_imports_lite__.ImportFrom(__package__, 'foo', 'bar')
 
 def f():
-    print(bar.v())
-    print(bar.v())
+    print(bar._lazy_value())
+    print(bar._lazy_value())
 """
     )
 

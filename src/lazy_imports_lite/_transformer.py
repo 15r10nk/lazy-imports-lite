@@ -112,7 +112,7 @@ class TransformModuleImports(ast.NodeTransformer):
         for field, value in ast.iter_fields(function):
             if field != "body":
                 if isinstance(value, list):
-                    setattr(function, field, [self.visit(v) for v in value])
+                    setattr(function, field, [self.visit(item) for item in value])
                 elif isinstance(value, ast.AST):
                     setattr(function, field, self.visit(value))
         self.functions.append(function)
@@ -152,7 +152,7 @@ class TransformModuleImports(ast.NodeTransformer):
         if node.id in self.transformed_imports and node.id not in self.locals:
             old_ctx = node.ctx
             node.ctx = ast.Load()
-            return ast.Attribute(value=node, attr="v", ctx=old_ctx)
+            return ast.Attribute(value=node, attr="_lazy_value", ctx=old_ctx)
         else:
             return node
 
