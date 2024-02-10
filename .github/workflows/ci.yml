@@ -33,13 +33,19 @@ jobs:
       with:
         python-version: ${{matrix.python-version}}
         architecture: x64
-    - run: |
+
+    - name: run tests for ${{matrix.python-version}}
+      env:
+        TOP: ${{github.workspace}}
+        COVERAGE_PROCESS_START: ${{github.workspace}}/pyproject.toml
+      run: |
         pip install hatch
         hatch run +python=${{matrix.python-version}} all:test-cov
 
     - name: Combine data
       env:
         TOP: ${{github.workspace}}
+        COVERAGE_PROCESS_START: ${{github.workspace}}/pyproject.toml
       run: |
         pip install coverage
         coverage combine
@@ -71,6 +77,7 @@ jobs:
     - name: Combine data
       env:
         TOP: ${{github.workspace}}
+        COVERAGE_PROCESS_START: ${{github.workspace}}/pyproject.toml
       run: |
         # i have problems to combine windows coverage files with linux coverage files
         rm .coverage.*.windows-latest

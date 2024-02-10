@@ -82,13 +82,14 @@ dependencies = [
     "astunparse"
 ]
 
+# all
 [tool.hatch.envs.all]
 dependencies = [
   "coverage[toml]>=6.5",
   "coverage-enable-subprocess",
   "pytest",
   "inline-snapshot",
-    "astunparse",
+  "astunparse",
   "mypy",
 ]
 env-vars.TOP = "{root}"
@@ -96,8 +97,20 @@ scripts.test-cov = "coverage run -m pytest {args:tests}"
 scripts.test = "pytest {args:tests}"
 scripts.test-mypy = "mypy src tests"
 
-
 [[tool.hatch.envs.all.matrix]]
+python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+# coverage
+[tool.hatch.envs.all-cov]
+template="all"
+extra-dependencies = [
+  "coverage[toml]>=6.5",
+  "coverage-enable-subprocess",
+]
+env-vars.TOP = "{root}"
+scripts.test = "coverage run -m pytest {args:tests}"
+
+[[tool.hatch.envs.all-cov.matrix]]
 python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
 [tool.hatch.envs.cov]
@@ -107,7 +120,7 @@ env-vars.TOP = "{root}"
 env-vars.COVERAGE_PROCESS_START = "{root}/pyproject.toml"
 scripts.all = [
   "- coverage erase",
-  "hatch run all:test-cov -- {args}",
+  "hatch run all-cov:test -- {args}",
   "coverage combine",
   "coverage html",
   "coverage report  --fail-under 100 "
@@ -115,7 +128,7 @@ scripts.all = [
 
 scripts.one = [
   "- coverage erase",
-  "hatch run +py=3.12 all:test-cov -- {args}",
+  "hatch run +py=3.12 all-cov:test -- {args}",
   "coverage combine",
   "coverage html",
   "coverage report  --fail-under 100 "
