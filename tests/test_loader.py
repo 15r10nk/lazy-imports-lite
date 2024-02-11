@@ -22,7 +22,7 @@ def write_files(dir, content):
 
 
 @contextmanager
-def package(name, content, extra_config=""):
+def package(name, content, extra_config="", lazy_imports_enabled=True):
     content = {
         "pyproject.toml": f"""
 
@@ -32,7 +32,7 @@ build-backend = "hatchling.build"
 
 [project]
 name="{name}"
-keywords=["lazy-imports-lite-enabled"]
+keywords=[{'"lazy-imports-lite-enabled"' if lazy_imports_enabled else ""}]
 version="0.0.1"
 """
         + extra_config,
@@ -555,6 +555,68 @@ print(type(test_pck.__spec__.loader))
         normal_stdout=snapshot(
             """\
 <class '_frozen_importlib_external.SourceFileLoader'>
+"""
+        ),
+        normal_stderr=snapshot(""),
+    )
+
+
+def test_namespace_package():
+    check_script(
+        [
+            package(
+                "test-pck-a",
+                {
+                    "source/test_pck/a/__init__.py": """\
+
+def foo():
+    print("foo")
+
+""",
+                },
+                extra_config="""
+[tool.hatch.build.targets.wheel]
+packages = ["source/test_pck"]
+""",
+            ),
+            package(
+                "test-pck-b",
+                {
+                    "source/test_pck/b/__init__.py": """\
+
+def foo():
+    print("foo")
+
+""",
+                },
+                extra_config="""
+[tool.hatch.build.targets.wheel]
+packages = ["source/test_pck"]
+""",
+                lazy_imports_enabled=False,
+            ),
+        ],
+        """\
+import test_pck
+import test_pck.a
+import test_pck.b
+
+for pck in (test_pck,test_pck.a,test_pck.b):
+    print(pck.__name__, str(type(pck.__spec__.loader)).replace("_",""))
+""",
+        transformed_stdout=snapshot(
+            """\
+test_pck <class 'frozenimportlibexternal.NamespaceLoader'>
+test_pck.a <class 'lazyimportslite.loader.LazyLoader'>
+test_pck.b <class 'frozenimportlibexternal.SourceFileLoader'>
+"""
+        ),
+        transformed_stderr=snapshot("<equal to normal>"),
+        normal_stdout=snapshot(
+            """\
+test_pck <class 'frozenimportlibexternal.NamespaceLoader'>
+test_pck.a <class 'frozenimportlibexternal.SourceFileLoader'>
+test_pck.b <class 'frozenimportlibexternal.SourceFileLoader'>
 """
         ),
         normal_stderr=snapshot(""),

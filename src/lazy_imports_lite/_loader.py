@@ -38,7 +38,7 @@ def scan_distributions():
         metadata = dist.metadata
 
         if metadata is None:
-            continue
+            continue  # pragma: no cover
 
         if metadata["Keywords"] is None:
             continue
@@ -56,13 +56,20 @@ def _top_level_declared(dist):
 def _top_level_inferred(dist):
     files = dist.files
     if files is None:
-        return {}
+        return {}  # pragma: no cover
 
-    return {
-        f.parts[0] if len(f.parts) > 1 else f.with_suffix("").name
+    parts = {
+        f.parts[:-1] if len(f.parts) > 1 else f.with_suffix("").name
         for f in files
         if f.suffix == ".py"
     }
+
+    is_namespace = min(len(p) for p in parts) == 2
+
+    if is_namespace:
+        return {".".join(p) for p in parts if len(p) == 2}
+    else:
+        return {".".join(p) for p in parts if len(p) == 1}
 
 
 class LazyLoader(importlib.abc.Loader, importlib.machinery.PathFinder):
@@ -83,8 +90,11 @@ class LazyLoader(importlib.abc.Loader, importlib.machinery.PathFinder):
             return None  # pragma: no cover
 
         name = spec.name.split(".")[0]
+        namespace_name = ".".join(spec.name.split(".")[:2])
 
-        if name in enabled_packages and spec.origin.endswith(".py"):
+        if (
+            name in enabled_packages or namespace_name in enabled_packages
+        ) and spec.origin.endswith(".py"):
             spec.loader = self
             return spec
 
