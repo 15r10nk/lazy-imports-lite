@@ -5,7 +5,6 @@ import importlib.metadata
 import os
 import sys
 import types
-from functools import lru_cache
 
 from ._hooks import LazyObject
 from ._transformer import TransformModuleImports
@@ -30,44 +29,40 @@ class LazyModule(types.ModuleType):
                 super().__setattr__(name, value)
 
 
-@lru_cache
-def packages_distributions():
-    return importlib.metadata.packages_distributions()
+enabled_packages = set()
 
 
-@lru_cache
-def is_enabled_by_metadata(name):
-    if name == "lazy_imports_lite":
-        return False
+def scan_distributions():
+    global enabled_packages
+    for dist in importlib.metadata.distributions():
+        metadata = dist.metadata
 
-    package_to_distribution = packages_distributions()
+        if metadata is None:
+            continue
 
-    if name not in package_to_distribution:
-        return False
+        if metadata["Keywords"] is None:
+            continue
 
-    names = list(set(package_to_distribution[name]))
+        keywords = metadata["Keywords"].split(",")
+        if "lazy-imports-lite-enabled" in keywords:
+            for pkg in _top_level_declared(dist) or _top_level_inferred(dist):
+                enabled_packages.add(pkg)
 
-    assert isinstance(names, list)
 
-    if len(names) != 1:
-        return False
+def _top_level_declared(dist):
+    return (dist.read_text("top_level.txt") or "").split()
 
-    name = names[0]
 
-    try:
-        metadata = importlib.metadata.metadata(name)
-    except importlib.metadata.PackageNotFoundError:
-        return False
+def _top_level_inferred(dist):
+    files = dist.files
+    if files is None:
+        return {}
 
-    if metadata is None:
-        return False  # pragma: no cover
-
-    if metadata["Keywords"] is None:
-        return False
-
-    keywords = metadata["Keywords"].split(",")
-    if "lazy-imports-lite-enabled" in keywords:
-        return True
+    return {
+        f.parts[0] if len(f.parts) > 1 else f.with_suffix("").name
+        for f in files
+        if f.suffix == ".py"
+    }
 
 
 class LazyLoader(importlib.abc.Loader, importlib.machinery.PathFinder):
@@ -89,7 +84,7 @@ class LazyLoader(importlib.abc.Loader, importlib.machinery.PathFinder):
 
         name = spec.name.split(".")[0]
 
-        if is_enabled_by_metadata(name) and spec.origin.endswith(".py"):
+        if name in enabled_packages and spec.origin.endswith(".py"):
             spec.loader = self
             return spec
 
@@ -114,8 +109,7 @@ class LazyLoader(importlib.abc.Loader, importlib.machinery.PathFinder):
 
 
 def setup():
-    # prevent some cyclic imports
-    pass
+    scan_distributions()
 
     if not any(isinstance(m, LazyLoader) for m in sys.meta_path):
         sys.meta_path.insert(0, LazyLoader())
