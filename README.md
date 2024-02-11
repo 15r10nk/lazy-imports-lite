@@ -13,16 +13,16 @@
 
 **lazy-imports-lite** changes the semantics of python imports and defers the import until it is used the first time like in [PEP 690](https://peps.python.org/pep-0690).
 
-I liked the idea of lazy-imports and wanted to use them for my projects without having to change my code.
-I hope this project allows more people to use lazy-imports in their projects.
+I liked the idea of lazy imports and wanted to use them for my projects without having to change my code.
+I hope this project allows more people to use lazy imports in their projects.
 
 > [!NOTE]
 > It is important to note that this project is not affiliated in any way with the original PEP.
-> I hope this project allows a wider adoption of lazy-imports, but there is currently no plan to standardize it.
+> I hope this project allows a wider adoption of lazy imports, but there is currently no plan to standardize it.
 
 > [!IMPORTANT]
 > **lazy-imports-lite** is still in early development and may contain bugs.
-> Make sure that to test your code carefully before you use it.
+> Make sure to test your code carefully before you use it.
 
 
 ## Key Features
@@ -33,7 +33,7 @@ I hope this project allows more people to use lazy-imports in their projects.
 
 How is it different to PEP 690?
 
-- It has not the same performance like the implementation from the pep. Every access to parts of imported modules is transformed to an attribute access `x` -> `x._lazy_value`.
+- It has not the same performance as the implementation from the pep. Every access to parts of imported modules is transformed to an attribute access `x` -> `x._lazy_value`.
 - Exceptions during deferred import are converted to `LazyImportError`
 
 
@@ -46,7 +46,7 @@ How is it different to PEP 690?
     keywords=["lazy-imports-lite-enabled"]
   ```
 
-This enables lazy imports for all top level imports in your modules in your project.
+This enables lazy imports for all top-level imports in your modules in your project.
 One way to verify if it is enabled is to check which loader is used.
 
 ``` pycon
@@ -81,13 +81,12 @@ def f():
     print(bar._lazy_value())
 ```
 
-This transformation should be never visible to you (the original source location is preserved) but it is good to know if something does not work as expected.
+This transformation should be never visible to you (the source location is preserved) but it is good to know if something does not work as expected.
 
-You can view a preview of this transformation with `lazy-imports-lite preview <filename>`, if you want to know how your code would be changed.
+You can view a preview of this transformation with `lazy-imports-lite preview <filename>` if you want to know how your code would be changed.
 
 ## TODO
 
-- [ ] windows support
 - [ ] handle exec/eval
 - [ ] mutable `globals()`
 
