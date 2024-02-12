@@ -95,6 +95,18 @@ class LazyLoader(importlib.abc.Loader, importlib.machinery.PathFinder):
         if (
             name in enabled_packages or namespace_name in enabled_packages
         ) and spec.origin.endswith(".py"):
+            origin: str = spec.origin
+            with open(origin) as f:
+                mod_raw = f.read()
+                mod_ast = ast.parse(mod_raw, origin, "exec")
+            for node in ast.walk(mod_ast):
+                if (
+                    isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Name)
+                    and node.func.id in ("eval", "exec")
+                ):
+                    return None
+            spec.mod_ast = mod_ast
             spec.loader = self
             return spec
 
@@ -105,13 +117,14 @@ class LazyLoader(importlib.abc.Loader, importlib.machinery.PathFinder):
 
     def exec_module(self, module):
         origin: str = module.__spec__.origin
-        with open(origin) as f:
-            mod_raw = f.read()
-            mod_ast = ast.parse(mod_raw, origin, "exec")
-            transformer = TransformModuleImports()
-            new_ast = transformer.visit(mod_ast)
 
-            ast.fix_missing_locations(new_ast)
+        mod_ast = module.__spec__.mod_ast
+        del module.__spec__.mod_ast
+
+        transformer = TransformModuleImports()
+        new_ast = transformer.visit(mod_ast)
+
+        ast.fix_missing_locations(new_ast)
         mod_code = compile(new_ast, origin, "exec")
         exec(mod_code, module.__dict__)
         del module.__dict__["__lazy_imports_lite__"]

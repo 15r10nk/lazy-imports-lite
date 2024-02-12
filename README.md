@@ -34,7 +34,8 @@ I hope this project allows more people to use lazy imports in their projects.
 How is it different to PEP 690?
 
 - It has not the same performance as the implementation from the pep. Every access to parts of imported modules is transformed to an attribute access `x` -> `x._lazy_value`.
-- Exceptions during deferred import are converted to `LazyImportError`
+- Exceptions during deferred import are converted to `LazyImportError`.
+- modules which use `exec` or `eval` can not be transformed.
 
 
 ## Usage
@@ -87,7 +88,6 @@ You can view a preview of this transformation with `lazy-imports-lite preview <f
 
 ## TODO
 
-- [ ] handle exec/eval
 - [ ] mutable `globals()`
 
 <!-- -8<- [start:Feedback] -->
