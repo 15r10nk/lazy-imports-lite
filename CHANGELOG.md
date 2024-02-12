@@ -1,3 +1,9 @@
+## v0.1.1 (2024-02-12)
+
+### Fix
+
+- skip modules with exec/eval
+
 ## v0.1.0 (2024-02-11)
 
 ### Feat
