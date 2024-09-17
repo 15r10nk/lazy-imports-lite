@@ -90,14 +90,3 @@ class ImportAs(LazyObject):
             return module
         else:
             assert False
-
-
-def make_globals(global_provider):
-    def g():
-        return {
-            key: value._lazy_value if isinstance(value, LazyObject) else value
-            for key, value in dict(global_provider()).items()
-            if key not in ("globals", "__lazy_imports_lite__")
-        }
-
-    return g
