@@ -38,6 +38,20 @@ Documentation = "https://github.com/15r10nk/lazy-imports-lite#readme"
 Issues = "https://github.com/15r10nk/lazy-imports-lite/issues"
 Source = "https://github.com/15r10nk/lazy-imports-lite"
 
+
+[dependency-groups]
+dev = [
+    "pytest-freezer>=0.4.8",
+    "pytest-mock>=3.14.0",
+    "pytest-xdist>=3.6.1",
+    "coverage[toml]>=7.6.1",
+    "coverage-enable-subprocess>=1.0",
+  "inline-snapshot[black]",
+    "astunparse",
+    "pip>=25.0.1"
+]
+
+
 [tool.black]
 target-version = ["py38"]
 
@@ -74,65 +88,29 @@ from lazy_imports_lite._loader import setup
 setup()
 """
 
-[tool.hatch.envs.default]
-scripts.test = "pytest {args:tests}"
-dependencies = [
-  "pytest",
-  "inline-snapshot",
-    "astunparse"
+[tool.hatch.envs.cov.scripts]
+github=[
+    "- rm htmlcov/*",
+    "gh run download -n html-report -D htmlcov",
+    "xdg-open htmlcov/index.html",
 ]
 
-# all
-[tool.hatch.envs.all]
-dependencies = [
-  "coverage[toml]>=6.5",
-  "coverage-enable-subprocess",
-  "pytest",
-  "inline-snapshot",
-  "astunparse",
-  "mypy",
-]
-env-vars.TOP = "{root}"
-scripts.test-cov = "coverage run -m pytest {args:tests}"
-scripts.test = "pytest {args:tests}"
-scripts.test-mypy = "mypy src tests"
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.8", "3.9", "3.10", "3.11", "3.12","3.13","pypy3.9","pypy3.10"]
 
-[[tool.hatch.envs.all.matrix]]
-python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
-
-# coverage
-[tool.hatch.envs.all-cov]
-template="all"
+[tool.hatch.envs.hatch-test]
 extra-dependencies = [
-  "coverage[toml]>=6.5",
-  "coverage-enable-subprocess",
+    "inline-snapshot[black]",
+    "astunparse",
+    "pip>=25.0.1"
 ]
 env-vars.TOP = "{root}"
-scripts.test = "coverage run -m pytest {args:tests}"
 
-[[tool.hatch.envs.all-cov.matrix]]
-python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
-
-[tool.hatch.envs.cov]
-dependencies = ["coverage[toml]>=6.5"]
-detached = true
-env-vars.TOP = "{root}"
-env-vars.COVERAGE_PROCESS_START = "{root}/pyproject.toml"
-scripts.all = [
-  "- coverage erase",
-  "hatch run all-cov:test -- {args}",
-  "coverage combine",
-  "coverage html",
-  "coverage report  --fail-under 100 "
-]
-
-scripts.one = [
-  "- coverage erase",
-  "hatch run +py=3.12 all-cov:test -- {args}",
-  "coverage combine",
-  "coverage html",
-  "coverage report  --fail-under 100 "
-]
+[tool.hatch.envs.hatch-test.scripts]
+run = "pytest{env:HATCH_TEST_ARGS:} {args}"
+run-cov = "coverage run -m pytest{env:HATCH_TEST_ARGS:} {args}"
+cov-combine = "coverage combine"
+cov-report=["coverage report","coverage html"]
 
 
 
@@ -146,3 +124,21 @@ scripts.serve = ["mkdocs serve {args}"]
 
 [tool.hatch.version]
 path = "src/lazy_imports_lite/__init__.py"
+
+
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "inline-snapshot[black,dirty-equals]",
+  "mypy>=1.0.0",
+  "hypothesis>=6.75.5",
+  "pydantic",
+  "attrs",
+  "typing-extensions"
+]
+
+[[tool.hatch.envs.types.matrix]]
+python = ["3.8", "3.9", "3.10", "3.11", "3.12","3.13"]
+
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/lazy_imports_lite tests}"

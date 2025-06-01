@@ -38,6 +38,7 @@ c='bar.foo.c'
             text = text.replace("\r\n", "\n")
             text = text.replace(str(dir), "<dir>")
             text = re.sub("at 0x[0-9a-fA-F]*>", "at <hex_value>>", text)
+            text = text.replace(" (built-in)", "")
             return text
 
         assert stderr == normalize_output(result.stderr)
@@ -292,7 +293,7 @@ for e in sorted(globals().items()):
         snapshot(
             """\
 __annotations__ {}
-__builtins__ <module 'builtins' (built-in)>
+__builtins__ <module 'builtins'>
 __cached__ None
 __doc__ None
 __loader__ <_frozen_importlib_external.SourceFileLoader object at <hex_value>>

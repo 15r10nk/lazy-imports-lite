@@ -1,4 +1,5 @@
 import os
+import platform
 import re
 import subprocess
 import subprocess as sp
@@ -6,6 +7,7 @@ import sys
 import typing
 from contextlib import contextmanager
 from contextlib import ExitStack
+from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -21,40 +23,42 @@ def write_files(dir, content):
         path.write_text(text)
 
 
-@contextmanager
-def package(name, content, extra_config="", lazy_imports_enabled=True):
-    content = {
-        "pyproject.toml": f"""
+@dataclass
+class package:
+    name: str
+    content: dict
+    extra_config: str = ""
+    lazy_imports_enabled: bool = True
 
+    @contextmanager
+    def install(self, venv_python):
+        content = {
+            "pyproject.toml": f"""\
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name="{name}"
-keywords=[{'"lazy-imports-lite-enabled"' if lazy_imports_enabled else ""}]
+name="{self.name}"
+keywords=[{'"lazy-imports-lite-enabled"' if self.lazy_imports_enabled else ""}]
 version="0.0.1"
-"""
-        + extra_config,
-        **content,
-    }
-    with TemporaryDirectory() as d:
-        package_dir = Path(d) / name
-        package_dir.mkdir()
+    """
+            + self.extra_config,
+            **self.content,
+        }
+        with TemporaryDirectory() as d:
+            package_dir = Path(d) / self.name
+            package_dir.mkdir()
 
-        write_files(package_dir, content)
+            write_files(package_dir, content)
 
-        subprocess.run(
-            [sys.executable, "-m", "pip", "install", str(package_dir)],
-            input=b"y",
-            check=True,
-        )
+            subprocess.run(
+                [venv_python, "-m", "pip", "install", str(package_dir)],
+                input=b"y",
+                check=True,
+            )
 
-        yield
-
-        subprocess.run(
-            [sys.executable, "-m", "pip", "uninstall", name], input=b"y", check=True
-        )
+            yield
 
 
 def check_script(
@@ -70,10 +74,9 @@ def check_script(
         text = output.decode()
         text = text.replace("\r\n", "\n")
 
-        prefix = re.escape(sys.exec_prefix.replace("\\", "\\\\"))
         backslash = "\\"
         text = re.sub(
-            f"'{prefix}[^']*site-packages([^']*)'",
+            f"'[^']*site-packages([^']*)'",
             lambda m: f"'<exec_prefix>{typing.cast(str,m[1]).replace(backslash*2,'/')}'",
             text,
         )
@@ -91,25 +94,56 @@ def check_script(
 
     packages = [package("test_pck", p) if isinstance(p, dict) else p for p in packages]
 
-    with ExitStack() as cm, TemporaryDirectory() as script_dir:
+    with TemporaryDirectory() as script_dir, ExitStack() as cm:
+        script_dir = Path(script_dir).resolve()
+
+        sp.run([sys.executable, "-m", "venv", "venv"], check=True, cwd=str(script_dir))
+
+        venv_python = str(script_dir / "venv" / "bin" / "python3")
+        if platform.system() == "Windows":  # pragma: no cover
+            venv_python = str(script_dir / "venv" / "Scripts" / "python.exe")
+
+        for p in (
+            "pip",
+            "coverage[toml]>=7.6.1",
+            "coverage-enable-subprocess>=1.0",
+        ):
+            sp.run(
+                [venv_python, "-m", "pip", "install", "--upgrade", p],
+                check=True,
+                cwd=str(script_dir),
+            )
+
+        subprocess.run(
+            [
+                venv_python,
+                "-m",
+                "pip",
+                "install",
+                "-e",
+                str(Path(__file__).parent.parent),
+            ],
+            input=b"y",
+            check=True,
+        )
+
         for p in packages:
-            cm.enter_context(p)
+            cm.enter_context(p.install(venv_python))
 
         print(sys.exec_prefix)
-        script_dir = Path(script_dir)
 
         script_file = script_dir / "script.py"
         script_file.write_text(script)
 
         normal_result = sp.run(
-            [sys.executable, str(script_file)],
+            [venv_python, str(script_file)],
             cwd=str(script_dir),
             env={**os.environ, "LAZY_IMPORTS_LITE_DISABLE": "True"},
             capture_output=True,
         )
 
         transformed_result = sp.run(
-            [sys.executable, str(script_file)], cwd=str(script_dir), capture_output=True
+            [venv_python, str(script_file)], cwd=str(script_dir), capture_output=True
         )
 
         n_stdout = normalize_output(normal_result.stdout)
