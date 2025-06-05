@@ -53,7 +53,7 @@ version="0.0.1"
             write_files(package_dir, content)
 
             subprocess.run(
-                [venv_python, "-m", "pip", "install", str(package_dir)],
+                ["uv", "pip", "install", str(package_dir), "-p", venv_python],
                 input=b"y",
                 check=True,
             )
@@ -97,34 +97,36 @@ def check_script(
     with TemporaryDirectory() as script_dir, ExitStack() as cm:
         script_dir = Path(script_dir).resolve()
 
-        sp.run([sys.executable, "-m", "venv", "venv"], check=True, cwd=str(script_dir))
+        # sp.run([sys.executable, "-m", "venv", "venv"], check=True, cwd=str(script_dir))
+        sp.run(["uv", "venv", "-p", sys.executable], check=True, cwd=str(script_dir))
 
-        venv_python = str(script_dir / "venv" / "bin" / "python3")
+        venv_python = str(script_dir / ".venv" / "bin" / "python3")
         if platform.system() == "Windows":  # pragma: no cover
-            venv_python = str(script_dir / "venv" / "Scripts" / "python.exe")
+            venv_python = str(script_dir / ".venv" / "Scripts" / "python.exe")
 
         for p in (
-            "pip",
             "coverage[toml]>=7.6.1",
             "coverage-enable-subprocess>=1.0",
         ):
             sp.run(
-                [venv_python, "-m", "pip", "install", "--upgrade", p],
+                ["uv", "pip", "install", "--upgrade", p, "-p", venv_python],
                 check=True,
                 cwd=str(script_dir),
             )
 
         subprocess.run(
             [
-                venv_python,
-                "-m",
+                "uv",
                 "pip",
                 "install",
                 "-e",
                 str(Path(__file__).parent.parent),
+                "-p",
+                venv_python,
             ],
             input=b"y",
             check=True,
+            cwd=str(script_dir),
         )
 
         for p in packages:

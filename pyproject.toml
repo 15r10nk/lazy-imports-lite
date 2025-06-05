@@ -48,7 +48,8 @@ dev = [
     "coverage-enable-subprocess>=1.0",
   "inline-snapshot[black]",
     "astunparse",
-    "pip>=25.0.1"
+    "pip>=25.0.1",
+    "uv>=0.7"
 ]
 
 
@@ -102,7 +103,8 @@ python = ["3.8", "3.9", "3.10", "3.11", "3.12","3.13","pypy3.9","pypy3.10"]
 extra-dependencies = [
     "inline-snapshot[black]",
     "astunparse",
-    "pip>=25.0.1"
+    "pip>=25.0.1",
+    "uv>=0.7"
 ]
 env-vars.TOP = "{root}"
 
