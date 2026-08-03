@@ -61,7 +61,7 @@ One way to verify if it is enabled is to check which loader is used.
 `lazy-imports-lite` works by rewriting the AST at runtime before the code is compiled.
 
 The following code:
-``` python
+```python
 from foo import bar
 
 
@@ -71,7 +71,7 @@ def f():
 
 is internally transformed to:
 
-``` python
+```python
 import lazy_imports_lite._hooks as __lazy_imports_lite__
 
 globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
