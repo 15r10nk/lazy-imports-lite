@@ -5,6 +5,7 @@ import importlib.metadata
 import os
 import sys
 import types
+from typing import Set
 
 from ._hooks import LazyObject
 from ._transformer import TransformModuleImports
@@ -29,7 +30,7 @@ class LazyModule(types.ModuleType):
                 super().__setattr__(name, value)
 
 
-enabled_packages = set()
+enabled_packages: Set[str] = set()
 
 
 def scan_distributions():
