@@ -77,7 +77,7 @@ class LazyLoader(importlib.abc.Loader, importlib.machinery.PathFinder):
     def find_spec(self, fullname, path=None, target=None):
         if fullname.startswith("encodings."):
             # fix wired windows bug
-            return None
+            return None  # pragma: no cover
 
         if "LAZY_IMPORTS_LITE_DISABLE" in os.environ:
             return None
