@@ -5,6 +5,7 @@ import importlib.metadata
 import os
 import sys
 import types
+from typing import Set
 
 from ._hooks import LazyObject
 from ._transformer import TransformModuleImports
@@ -29,7 +30,7 @@ class LazyModule(types.ModuleType):
                 super().__setattr__(name, value)
 
 
-enabled_packages = set()
+enabled_packages: Set[str] = set()
 
 
 def scan_distributions():
@@ -76,7 +77,7 @@ class LazyLoader(importlib.abc.Loader, importlib.machinery.PathFinder):
     def find_spec(self, fullname, path=None, target=None):
         if fullname.startswith("encodings."):
             # fix wired windows bug
-            return None
+            return None  # pragma: no cover
 
         if "LAZY_IMPORTS_LITE_DISABLE" in os.environ:
             return None

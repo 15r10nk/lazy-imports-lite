@@ -1,5 +1,8 @@
 import importlib
 from collections import defaultdict
+from typing import DefaultDict
+from typing import List
+from typing import Set
 
 
 class LazyObject:
@@ -39,8 +42,8 @@ class ImportFrom(LazyObject):
             assert False
 
 
-pending_imports = defaultdict(list)
-imported_modules = set()
+pending_imports: DefaultDict[str, List[str]] = defaultdict(list)
+imported_modules: Set[str] = set()
 
 
 def safe_import(module, package=None):
