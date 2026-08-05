@@ -24,12 +24,12 @@ def f():
     assert result.stdout.decode().replace("\r\n", "\n") == snapshot(
         """\
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-bar = __lazy_imports_lite__.ImportFrom(__package__, 'foo', 'bar')
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('bar', __lazy_imports_lite__.ImportFrom(__package__, 'foo', 'bar'))
 
 def f():
-    print(bar._lazy_value())
-    print(bar._lazy_value())
+    print(bar())
+    print(bar())
 """
     )
 

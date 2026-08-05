@@ -19,7 +19,7 @@ Code can be marked with `pragma: no cover`, if it can not be tested for some rea
 This makes it easy to spot uncovered code in the source.
 
 Impossible conditions can be handled with `assert False`.
-``` python
+```python
 if some_condition:
     ...
 if some_other_codition:

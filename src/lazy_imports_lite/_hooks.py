@@ -8,6 +8,9 @@ from typing import Set
 class LazyObject:
     __slots__ = ("_lazy_value",)
 
+    def __call__(self):
+        return self._lazy_value
+
 
 class LazyImportError(BaseException):
     def __init__(self, module, package):

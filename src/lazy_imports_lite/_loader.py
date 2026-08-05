@@ -7,27 +7,16 @@ import sys
 import types
 from typing import Set
 
-from ._hooks import LazyObject
 from ._transformer import TransformModuleImports
 
 
 class LazyModule(types.ModuleType):
-    def __getattribute__(self, name):
-        value = super().__getattribute__(name)
-        if isinstance(value, LazyObject):
-            return value._lazy_value
-        return value
-
-    def __setattr__(self, name, value):
-        try:
-            current_value = super().__getattribute__(name)
-        except:
-            super().__setattr__(name, value)
-        else:
-            if isinstance(current_value, LazyObject):
-                current_value._lazy_value = value
-            else:
-                super().__setattr__(name, value)
+    def __getattr__(self, name):
+        namespace = types.ModuleType.__getattribute__(self, "__dict__")
+        builtins = namespace.get("__builtins__")
+        if isinstance(builtins, BuiltinWrapper) and name in builtins.lazy_objects:
+            return builtins.resolve(name)
+        raise AttributeError(name)
 
 
 enabled_packages: Set[str] = set()
@@ -65,7 +54,7 @@ def _top_level_inferred(dist):
         if f.suffix == ".py"
     }
 
-    is_namespace = min(len(p) for p in parts) == 2
+    is_namespace = parts and min(len(p) for p in parts) == 2
 
     if is_namespace:
         return {".".join(p) for p in parts if len(p) == 2}
@@ -127,9 +116,68 @@ class LazyLoader(importlib.abc.Loader, importlib.machinery.PathFinder):
 
         ast.fix_missing_locations(new_ast)
         mod_code = compile(new_ast, origin, "exec")
+
+        module.__dict__["__builtins__"] = BuiltinWrapper(
+            module.__dict__.get("__builtins__", __builtins__), module.__dict__
+        )
+
         exec(mod_code, module.__dict__)
         del module.__dict__["__lazy_imports_lite__"]
         del module.__dict__["globals"]
+
+
+class BuiltinWrapper(dict):
+    def __init__(self, original_builtins, module_namespace):
+        if isinstance(original_builtins, types.ModuleType):
+            original_builtins = vars(original_builtins)
+        self.lazy_objects = {}
+        self.module_namespace = module_namespace
+        super().__init__(original_builtins)
+        self["__register_lazy_import__"] = self
+
+    def __call__(self, name, lazy_object):
+        # An import statement binds its target even if that name was resolved or
+        # assigned earlier in the module.
+        self.module_namespace.pop(name, None)
+        self.lazy_objects[name] = lazy_object
+
+    def resolve(self, name):
+        lazy_object = self.lazy_objects.pop(name)
+        value = lazy_object()
+        self.module_namespace[name] = value
+        return value
+
+    def delete(self, name):
+        if name in self.module_namespace:
+            del self.module_namespace[name]
+            self.lazy_objects.pop(name, None)
+            return
+
+        if name in self.lazy_objects:
+            del self.lazy_objects[name]
+            return
+
+        raise NameError(f"name {name!r} is not defined")
+
+    def make_globals(self, global_provider):
+        def g():
+            for name in list(self.lazy_objects):
+                if name in self.module_namespace:
+                    self.lazy_objects.pop(name)
+                else:
+                    self.resolve(name)
+            return {
+                key: value
+                for key, value in global_provider().items()
+                if key not in ("globals", "__lazy_imports_lite__")
+            }
+
+        return g
+
+    def __missing__(self, name):
+        if name in self.lazy_objects:
+            return self.resolve(name)
+        raise KeyError(name)
 
 
 def setup():
