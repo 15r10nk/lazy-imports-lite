@@ -191,23 +191,19 @@ from test_pck import use_x, use_y
 print("y:",use_y())
 print("x:",use_x())
 """,
-        transformed_stdout=snapshot(
-            """\
+        transformed_stdout=snapshot("""\
 imported my
 y: 5
 imported mx
 x: 5
-"""
-        ),
+"""),
         transformed_stderr=snapshot("<equal to normal>"),
-        normal_stdout=snapshot(
-            """\
+        normal_stdout=snapshot("""\
 imported mx
 imported my
 y: 5
 x: 5
-"""
-        ),
+"""),
         normal_stderr=snapshot(""),
     )
 
@@ -232,21 +228,17 @@ x=5
 from test_pck import use_x
 print("x:",use_x())
 """,
-        transformed_stdout=snapshot(
-            """\
+        transformed_stdout=snapshot("""\
 imported init
 imported mx
 x: 5
-"""
-        ),
+"""),
         transformed_stderr=snapshot("<equal to normal>"),
-        normal_stdout=snapshot(
-            """\
+        normal_stdout=snapshot("""\
 imported mx
 imported init
 x: 5
-"""
-        ),
+"""),
         normal_stderr=snapshot(""),
     )
 
@@ -275,23 +267,19 @@ print("y:",y)
 from test_pck import x
 print("x:",x)
 """,
-        transformed_stdout=snapshot(
-            """\
+        transformed_stdout=snapshot("""\
 imported my
 y: 5
 imported mx
 x: 5
-"""
-        ),
+"""),
         transformed_stderr=snapshot("<equal to normal>"),
-        normal_stdout=snapshot(
-            """\
+        normal_stdout=snapshot("""\
 imported mx
 imported my
 y: 5
 x: 5
-"""
-        ),
+"""),
         normal_stderr=snapshot(""),
     )
 
@@ -317,19 +305,15 @@ import test_pck
 print(test_pck)
 print(vars(test_pck).keys())
 """,
-        transformed_stdout=snapshot(
-            """\
+        transformed_stdout=snapshot("""\
 <module 'test_pck' from '<exec_prefix>/test_pck/__init__.py'>
-dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'x', 'y'])
-"""
-        ),
+dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__'])
+"""),
         transformed_stderr=snapshot("<equal to normal>"),
-        normal_stdout=snapshot(
-            """\
+        normal_stdout=snapshot("""\
 <module 'test_pck' from '<exec_prefix>/test_pck/__init__.py'>
 dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'mx', 'x', 'my', 'y'])
-"""
-        ),
+"""),
         normal_stderr=snapshot(""),
     )
 
@@ -362,25 +346,15 @@ print("outside",vars(test_pck).keys())
 
 test_pck.later()
 """,
-        transformed_stdout=snapshot(
-            """\
-inside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'x'])
-mx <module 'test_pck.mx' from '<exec_prefix>/test_pck/mx.py'>
-inside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'x', 'mx'])
-outside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'x', 'mx', 'later'])
-later dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'x', 'mx', 'later'])
-"""
-        ),
+        transformed_stdout=snapshot("<equal to normal>"),
         transformed_stderr=snapshot("<equal to normal>"),
-        normal_stdout=snapshot(
-            """\
+        normal_stdout=snapshot("""\
 inside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'mx', 'x'])
 mx <module 'test_pck.mx' from '<exec_prefix>/test_pck/mx.py'>
 inside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'mx', 'x'])
 outside dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'mx', 'x', 'later'])
 later dict_keys(['__name__', '__doc__', '__package__', '__loader__', '__spec__', '__path__', '__file__', '__cached__', '__builtins__', 'mx', 'x', 'later'])
-"""
-        ),
+"""),
         normal_stderr=snapshot(""),
     )
 
@@ -404,18 +378,14 @@ except BaseException as e:
         print(f"{type(e).__name__}: {e}")
         e=e.__cause__ if e.__suppress_context__ else e.__context__
 """,
-        transformed_stdout=snapshot(
-            """\
+        transformed_stdout=snapshot("""\
 LazyImportError: Deferred importing of module 'test_pck.m' caused an error⏎
 ValueError: ⏎
-"""
-        ),
+"""),
         transformed_stderr=snapshot("<equal to normal>"),
-        normal_stdout=snapshot(
-            """\
+        normal_stdout=snapshot("""\
 ValueError: ⏎
-"""
-        ),
+"""),
         normal_stderr=snapshot(""),
     )
 
@@ -447,18 +417,14 @@ except BaseException as e:
         print(f"{type(e).__name__}: {e}")
         e=e.__cause__ if e.__suppress_context__ else e.__context__
 """,
-        transformed_stdout=snapshot(
-            """\
+        transformed_stdout=snapshot("""\
 LazyImportError: Deferred importing of module '.y' in 'test_pck.m' caused an error⏎
 ValueError: ⏎
-"""
-        ),
+"""),
         transformed_stderr=snapshot("<equal to normal>"),
-        normal_stdout=snapshot(
-            """\
+        normal_stdout=snapshot("""\
 ValueError: ⏎
-"""
-        ),
+"""),
         normal_stderr=snapshot(""),
     )
 
@@ -483,11 +449,9 @@ print(mb.a)
 """,
         transformed_stdout=snapshot("<equal to normal>"),
         transformed_stderr=snapshot("<equal to normal>"),
-        normal_stdout=snapshot(
-            """\
+        normal_stdout=snapshot("""\
 5
-"""
-        ),
+"""),
         normal_stderr=snapshot(""),
     )
 
@@ -518,12 +482,84 @@ foo()
 """,
         transformed_stdout=snapshot("<equal to normal>"),
         transformed_stderr=snapshot("<equal to normal>"),
-        normal_stdout=snapshot(
-            """\
+        normal_stdout=snapshot("""\
 5
 6
-"""
-        ),
+"""),
+        normal_stderr=snapshot(""),
+    )
+
+
+def test_star_import():
+    check_script(
+        {
+            "test_pck/__init__.py": """\
+from .values import *
+""",
+            "test_pck/values.py": """\
+__all__ = ["x"]
+x = 5
+y = 6
+""",
+        },
+        """\
+from test_pck import *
+
+print(x)
+print("y" in globals())
+""",
+        transformed_stdout=snapshot("<equal to normal>"),
+        transformed_stderr=snapshot("<equal to normal>"),
+        normal_stdout=snapshot("""\
+5
+False
+"""),
+        normal_stderr=snapshot(""),
+    )
+
+
+def test_delete_lazy_import():
+    check_script(
+        {
+            "test_pck/__init__.py": """\
+import test_pck.values as values
+
+del values
+print("deleted")
+            """,
+            "test_pck/values.py": """\
+print("imported")
+""",
+        },
+        """\
+import test_pck
+""",
+        transformed_stdout=snapshot("deleted\n"),
+        transformed_stderr=snapshot("<equal to normal>"),
+        normal_stdout=snapshot("imported\ndeleted\n"),
+        normal_stderr=snapshot(""),
+    )
+
+
+def test_globals_preserves_assignment_over_lazy_import():
+    check_script(
+        {
+            "test_pck/__init__.py": """\
+import test_pck.values as values
+
+values = 5
+print(globals()["values"])
+""",
+            "test_pck/values.py": """\
+print("imported")
+""",
+        },
+        """\
+import test_pck
+""",
+        transformed_stdout=snapshot("5\n"),
+        transformed_stderr=snapshot("<equal to normal>"),
+        normal_stdout=snapshot("imported\n5\n"),
         normal_stderr=snapshot(""),
     )
 
@@ -544,17 +580,11 @@ import test_pck
 print(type(test_pck.__spec__.loader))
 
 """,
-        transformed_stdout=snapshot(
-            """\
-<class 'lazy_imports_lite._loader.LazyLoader'>
-"""
-        ),
+        transformed_stdout=snapshot("<class 'lazy_imports_lite._loader.LazyLoader'>\n"),
         transformed_stderr=snapshot("<equal to normal>"),
-        normal_stdout=snapshot(
-            """\
+        normal_stdout=snapshot("""\
 <class '_frozen_importlib_external.SourceFileLoader'>
-"""
-        ),
+"""),
         normal_stderr=snapshot(""),
     )
 
@@ -582,17 +612,11 @@ import test_pck
 print(type(test_pck.__spec__.loader))
 
 """,
-        transformed_stdout=snapshot(
-            """\
-<class 'lazy_imports_lite._loader.LazyLoader'>
-"""
-        ),
+        transformed_stdout=snapshot("<class 'lazy_imports_lite._loader.LazyLoader'>\n"),
         transformed_stderr=snapshot("<equal to normal>"),
-        normal_stdout=snapshot(
-            """\
+        normal_stdout=snapshot("""\
 <class '_frozen_importlib_external.SourceFileLoader'>
-"""
-        ),
+"""),
         normal_stderr=snapshot(""),
     )
 
@@ -640,20 +664,16 @@ import test_pck.b
 for pck in (test_pck,test_pck.a,test_pck.b):
     print(pck.__name__, str(type(pck.__spec__.loader)).replace("_",""))
 """,
-        transformed_stdout=snapshot(
-            """\
+        transformed_stdout=snapshot("""\
 test_pck <class 'frozenimportlibexternal.NamespaceLoader'>
 test_pck.a <class 'lazyimportslite.loader.LazyLoader'>
 test_pck.b <class 'frozenimportlibexternal.SourceFileLoader'>
-"""
-        ),
+"""),
         transformed_stderr=snapshot("<equal to normal>"),
-        normal_stdout=snapshot(
-            """\
+        normal_stdout=snapshot("""\
 test_pck <class 'frozenimportlibexternal.NamespaceLoader'>
 test_pck.a <class 'frozenimportlibexternal.SourceFileLoader'>
 test_pck.b <class 'frozenimportlibexternal.SourceFileLoader'>
-"""
-        ),
+"""),
         normal_stderr=snapshot(""),
     )

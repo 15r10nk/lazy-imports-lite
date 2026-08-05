@@ -9,37 +9,31 @@ from inline_snapshot import snapshot
 def test_cli(tmp_path):
     file = tmp_path / "example.py"
 
-    file.write_text(
-        """\
+    file.write_text("""\
 from foo import bar
 
 
 def f():
     print(bar())
     print(bar())
-"""
-    )
+""")
     result = sp.run(["lazy-imports-lite", "preview", str(file)], capture_output=True)
     assert result.returncode == 0
-    assert result.stdout.decode().replace("\r\n", "\n") == snapshot(
-        """\
+    assert result.stdout.decode().replace("\r\n", "\n") == snapshot("""\
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-bar = __lazy_imports_lite__.ImportFrom(__package__, 'foo', 'bar')
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('bar', __lazy_imports_lite__.ImportFrom(__package__, 'foo', 'bar'))
 
 def f():
-    print(bar._lazy_value())
-    print(bar._lazy_value())
-"""
-    )
+    print(bar())
+    print(bar())
+""")
 
 
 def test_cli_invalid_args():
     result = sp.run([sys.executable, "-m", "lazy_imports_lite"], capture_output=True)
     assert result.returncode == 1
     assert result.stdout.decode().replace("\r\n", "\n") == snapshot("")
-    assert result.stderr.decode().replace("\r\n", "\n") == snapshot(
-        """\
+    assert result.stderr.decode().replace("\r\n", "\n") == snapshot("""\
 Error: Please specify a valid subcommand. Use 'preview --help' for more information.
-"""
-    )
+""")

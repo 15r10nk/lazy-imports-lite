@@ -55,6 +55,18 @@ c='bar.foo.c'
         new_code = unparse(new_tree)
         new_code = new_code.replace("lambda :", "lambda:")
 
+        new_code = f"""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
+{new_code}
+''',globals())
+"""
+
         if sys.version_info >= (3, 9):
             # unparse does not produce the same code for 3.8
             assert new_code == transformed_code
@@ -73,21 +85,27 @@ if True:
     from x import y
     import z
     """,
-        snapshot(
-            """\
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
-b = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'b')
-d = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'c')
-baz = __lazy_imports_lite__.ImportAs('bar')
-f = __lazy_imports_lite__.ImportAs('bar.foo')
-bar = __lazy_imports_lite__.Import('bar')
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('a', __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a'))
+__register_lazy_import__('b', __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'b'))
+__register_lazy_import__('d', __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'c'))
+__register_lazy_import__('baz', __lazy_imports_lite__.ImportAs('bar'))
+__register_lazy_import__('f', __lazy_imports_lite__.ImportAs('bar.foo'))
+__register_lazy_import__('bar', __lazy_imports_lite__.Import('bar'))
 if True:
     from x import y
-    import z\
-"""
-        ),
+    import z
+''',globals())
+"""),
         snapshot(""),
         snapshot(""),
     )
@@ -101,19 +119,23 @@ from bar.foo import a
 print(a)
 
     """,
-        snapshot(
-            """\
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
-print(a._lazy_value)\
-"""
-        ),
-        snapshot(
-            """\
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('a', __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a'))
+print(a)
+''',globals())
+"""),
+        snapshot("""\
 bar.foo.a
-"""
-        ),
+"""),
         snapshot(""),
     )
 
@@ -128,22 +150,26 @@ def f():
 
 print(f())
     """,
-        snapshot(
-            """\
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('a', __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a'))
 
 def f():
-    return a._lazy_value
-print(f())\
-"""
-        ),
-        snapshot(
-            """\
+    return a
+print(f())
+''',globals())
+"""),
+        snapshot("""\
 bar.foo.a
-"""
-        ),
+"""),
         snapshot(""),
     )
 
@@ -158,23 +184,27 @@ def f():
     return a
 print(f())
     """,
-        snapshot(
-            """\
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('a', __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a'))
 
 def f():
     a = 5
     return a
-print(f())\
-"""
-        ),
-        snapshot(
-            """\
+print(f())
+''',globals())
+"""),
+        snapshot("""\
 5
-"""
-        ),
+"""),
         snapshot(""),
     )
 
@@ -190,24 +220,28 @@ def f():
     return a
 print(f())
     """,
-        snapshot(
-            """\
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('a', __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a'))
 
 def f():
     global a
-    a._lazy_value = 5
-    return a._lazy_value
-print(f())\
-"""
-        ),
-        snapshot(
-            """\
+    a = 5
+    return a
+print(f())
+''',globals())
+"""),
+        snapshot("""\
 5
-"""
-        ),
+"""),
         snapshot(""),
     )
 
@@ -221,22 +255,26 @@ def f(a=5):
     return a
 print(f())
     """,
-        snapshot(
-            """\
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('a', __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a'))
 
 def f(a=5):
     return a
-print(f())\
-"""
-        ),
-        snapshot(
-            """\
+print(f())
+''',globals())
+"""),
+        snapshot("""\
 5
-"""
-        ),
+"""),
         snapshot(""),
     )
 
@@ -250,22 +288,26 @@ def f(b=a):
     return b
 print(f())
     """,
-        snapshot(
-            """\
-import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
 
-def f(b=a._lazy_value):
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
+import lazy_imports_lite._hooks as __lazy_imports_lite__
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('a', __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a'))
+
+def f(b=a):
     return b
-print(f())\
-"""
-        ),
-        snapshot(
-            """\
+print(f())
+''',globals())
+"""),
+        snapshot("""\
 bar.foo.a
-"""
-        ),
+"""),
         snapshot(""),
     )
 
@@ -276,24 +318,27 @@ def test_globals():
 from bar.foo import a
 
 for e in sorted(globals().items()):
-    if e[0]!="__file__":
+    if e[0] not in ("__file__","__builtins__","__register_lazy_import__"):
         print(*e)
 
     """,
-        snapshot(
-            """\
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-a = __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a')
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('a', __lazy_imports_lite__.ImportFrom(__package__, 'bar.foo', 'a'))
 for e in sorted(globals().items()):
-    if e[0] != '__file__':
-        print(*e)\
-"""
-        ),
-        snapshot(
-            """\
-__annotations__ {}
-__builtins__ <module 'builtins'>
+    if e[0] not in ('__file__', '__builtins__', '__register_lazy_import__'):
+        print(*e)
+''',globals())
+"""),
+        snapshot("""\
 __cached__ None
 __doc__ None
 __loader__ <_frozen_importlib_external.SourceFileLoader object at <hex_value>>
@@ -301,8 +346,7 @@ __name__ __main__
 __package__ None
 __spec__ None
 a bar.foo.a
-"""
-        ),
+"""),
         snapshot(""),
     )
 
@@ -316,22 +360,26 @@ import bar.foo
 
 print(bar.foo.a)
     """,
-        snapshot(
-            """\
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-bar = __lazy_imports_lite__.Import('bar')
-print(bar._lazy_value.foo)
-bar = __lazy_imports_lite__.Import('bar.foo')
-print(bar._lazy_value.foo.a)\
-"""
-        ),
-        snapshot(
-            """\
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('bar', __lazy_imports_lite__.Import('bar'))
+print(bar.foo)
+__register_lazy_import__('bar', __lazy_imports_lite__.Import('bar.foo'))
+print(bar.foo.a)
+''',globals())
+"""),
+        snapshot("""\
 bar.foo
 bar.foo.a
-"""
-        ),
+"""),
         snapshot(""),
     )
 
@@ -342,20 +390,24 @@ import bar
 
 print(bar.foo.a)
     """,
-        snapshot(
-            """\
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-bar = __lazy_imports_lite__.Import('bar.foo')
-bar = __lazy_imports_lite__.Import('bar')
-print(bar._lazy_value.foo.a)\
-"""
-        ),
-        snapshot(
-            """\
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('bar', __lazy_imports_lite__.Import('bar.foo'))
+__register_lazy_import__('bar', __lazy_imports_lite__.Import('bar'))
+print(bar.foo.a)
+''',globals())
+"""),
+        snapshot("""\
 bar.foo.a
-"""
-        ),
+"""),
         snapshot(""),
     )
 
@@ -367,19 +419,23 @@ import bar.foo as f
 
 print(f.a)
     """,
-        snapshot(
-            """\
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-f = __lazy_imports_lite__.ImportAs('bar.foo')
-print(f._lazy_value.a)\
-"""
-        ),
-        snapshot(
-            """\
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('f', __lazy_imports_lite__.ImportAs('bar.foo'))
+print(f.a)
+''',globals())
+"""),
+        snapshot("""\
 bar.foo.a
-"""
-        ),
+"""),
         snapshot(""),
     )
 
@@ -391,19 +447,23 @@ import bar.foo as f
 
 print((lambda:f.a)())
     """,
-        snapshot(
-            """\
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-f = __lazy_imports_lite__.ImportAs('bar.foo')
-print((lambda: f._lazy_value.a)())\
-"""
-        ),
-        snapshot(
-            """\
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('f', __lazy_imports_lite__.ImportAs('bar.foo'))
+print((lambda: f.a)())
+''',globals())
+"""),
+        snapshot("""\
 bar.foo.a
-"""
-        ),
+"""),
         snapshot(""),
     )
 
@@ -421,23 +481,27 @@ import asyncio
 asyncio.run(foo())
 
     """,
-        snapshot(
-            """\
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-f = __lazy_imports_lite__.ImportAs('bar.foo')
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('f', __lazy_imports_lite__.ImportAs('bar.foo'))
 
 async def foo():
-    print(f._lazy_value.a)
-asyncio = __lazy_imports_lite__.Import('asyncio')
-asyncio._lazy_value.run(foo())\
-"""
-        ),
-        snapshot(
-            """\
+    print(f.a)
+__register_lazy_import__('asyncio', __lazy_imports_lite__.Import('asyncio'))
+asyncio.run(foo())
+''',globals())
+"""),
+        snapshot("""\
 bar.foo.a
-"""
-        ),
+"""),
         snapshot(""),
     )
 
@@ -452,21 +516,25 @@ import bar.foo as f
 print(f.a)
 
     """,
-        snapshot(
-            '''\
-"""doc string"""
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
+\"\"\"doc string\"\"\"
 from __future__ import annotations
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-f = __lazy_imports_lite__.ImportAs('bar.foo')
-print(f._lazy_value.a)\
-'''
-        ),
-        snapshot(
-            """\
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('f', __lazy_imports_lite__.ImportAs('bar.foo'))
+print(f.a)
+''',globals())
+"""),
+        snapshot("""\
 bar.foo.a
-"""
-        ),
+"""),
         snapshot(""),
     )
 
@@ -483,24 +551,28 @@ def foo(a=lambda:f.a):
 foo()
 
     """,
-        snapshot(
-            '''\
-"""doc string"""
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
+\"\"\"doc string\"\"\"
 from __future__ import annotations
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-f = __lazy_imports_lite__.ImportAs('bar.foo')
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('f', __lazy_imports_lite__.ImportAs('bar.foo'))
 
-def foo(a=lambda: f._lazy_value.a):
+def foo(a=lambda: f.a):
     print(a())
-foo()\
-'''
-        ),
-        snapshot(
-            """\
+foo()
+''',globals())
+"""),
+        snapshot("""\
 bar.foo.a
-"""
-        ),
+"""),
         snapshot(""),
     )
 
@@ -528,13 +600,19 @@ print("call")
 foo()
 
     """,
-        snapshot(
-            '''\
-"""doc string"""
+        snapshot("""\
+from lazy_imports_lite._loader import BuiltinWrapper
+
+__builtins__=BuiltinWrapper(__builtins__.__dict__,globals())
+__register_lazy_import__=__builtins__
+del BuiltinWrapper
+
+exec('''
+\"\"\"doc string\"\"\"
 from __future__ import annotations
 import lazy_imports_lite._hooks as __lazy_imports_lite__
-globals = __lazy_imports_lite__.make_globals(lambda g=globals: g())
-f = __lazy_imports_lite__.ImportAs('bar.foo')
+globals = __register_lazy_import__.make_globals(lambda g=globals: g())
+__register_lazy_import__('f', __lazy_imports_lite__.ImportAs('bar.foo'))
 
 def deco(thing):
 
@@ -543,19 +621,17 @@ def deco(thing):
         return f
     return w
 
-@deco(f._lazy_value)
+@deco(f)
 def foo():
-    print('in f', f._lazy_value.a)
+    print('in f', f.a)
 print('call')
-foo()\
-'''
-        ),
-        snapshot(
-            """\
+foo()
+''',globals())
+"""),
+        snapshot("""\
 in w bar.foo.a
 call
 in f bar.foo.a
-"""
-        ),
+"""),
         snapshot(""),
     )
