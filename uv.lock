@@ -916,7 +916,7 @@ dev = [
 [package.metadata.requires-dev]
 cog = [{ name = "cogapp", specifier = ">=3.4.1" }]
 dev = [
-    { name = "astunparse" },
+    { name = "astunparse", specifier = ">=1.6.3" },
     { name = "commitizen", marker = "python_full_version >= '3.10'", specifier = "==4.16.5" },
     { name = "coverage", extras = ["toml"], specifier = ">=7.6.1" },
     { name = "coverage-enable-subprocess", specifier = ">=1.0" },

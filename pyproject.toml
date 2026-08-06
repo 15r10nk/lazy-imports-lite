@@ -51,7 +51,7 @@ dev = [
     "coverage[toml]>=7.6.1",
     "coverage-enable-subprocess>=1.0",
   "inline-snapshot[black]>=0.31.1",
-    "astunparse",
+    "astunparse>=1.6.3",
     "pip>=25.0.1",
     "scriv==1.8.0; python_version >= '3.10'",
     "uv>=0.7"
@@ -107,7 +107,7 @@ python = ["3.8", "3.9", "3.10", "3.11", "3.12","3.13","pypy3.9","pypy3.10"]
 [tool.hatch.envs.hatch-test]
 extra-dependencies = [
     "inline-snapshot[black]>=0.31.1",
-    "astunparse",
+    "astunparse>=1.6.3",
     "pip>=25.0.1",
     "uv>=0.7"
 ]
