@@ -1,6 +1,10 @@
 # Changes here will be overwritten by Copier
-_commit: v0.0.3
+_commit: v0.4.1
 _src_path: ../project-template
+author_email: 15r10nk@polarbit.de
+author_name: Frank Hoffmann
+discord_id: ''
+discord_invite_id: ''
 full_coverage: true
 github_user: 15r10nk
 insider_only: false
@@ -8,11 +12,14 @@ module_name: lazy_imports_lite
 project_description: PEP 690 like lazy imports for python
 project_main: true
 project_name: lazy-imports-lite
+pypy_versions:
+- pypy3.10
 python_versions:
 - '3.8'
 - '3.9'
 - '3.10'
 - '3.11'
 - '3.12'
+- '3.13'
 show_project_logo: false
 use_mkdocs: true

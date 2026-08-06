@@ -6,6 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from inline_snapshot import snapshot
+
 from lazy_imports_lite._transformer import TransformModuleImports
 from lazy_imports_lite._utils import unparse
 

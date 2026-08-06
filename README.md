@@ -2,11 +2,12 @@
 
 
 ![ci](https://github.com/15r10nk/lazy-imports-lite/actions/workflows/ci.yml/badge.svg?branch=main)
-[![Docs](https://img.shields.io/badge/docs-mkdocs-green)](https://15r10nk.github.io/lazy-imports-lite/)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-green)](https://15r10nk.github.io/lazy-imports-lite/latest/)
+
 [![pypi version](https://img.shields.io/pypi/v/lazy-imports-lite.svg)](https://pypi.org/project/lazy-imports-lite/)
 ![Python Versions](https://img.shields.io/pypi/pyversions/lazy-imports-lite)
-![PyPI - Downloads](https://img.shields.io/pypi/dw/lazy-imports-lite)
-[![coverage](https://img.shields.io/badge/coverage-100%25-blue)](https://15r10nk.github.io/lazy-imports-lite/contributing/#coverage)
+[![PyPI - Downloads](https://img.shields.io/pypi/dw/lazy-imports-lite)](https://pypacktrends.com/?packages=lazy-imports-lite&time_range=2years)
+[![coverage](https://img.shields.io/badge/coverage-100%25-blue)](https://15r10nk.github.io/lazy-imports-lite/latest/contributing/#coverage)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/15r10nk)](https://github.com/sponsors/15r10nk)
 
 <!-- -8<- [end:Header] -->
