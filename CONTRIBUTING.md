@@ -22,7 +22,7 @@ Impossible conditions can be handled with `assert False`.
 ``` python
 if some_condition:
     ...
-if some_other_codition:
+if some_other_condition:
     ...
 else:
     assert False, "unreachable because ..."
@@ -32,3 +32,8 @@ This serves also as an additional check during runtime.
 
 # Commits
 Please use [pre-commit](https://pre-commit.com/) for your commits.
+
+# Changelog
+Add a changelog fragment for user-visible changes with
+`uv run scriv create --add --edit`. The fragments are collected automatically
+when the release pull request is created.

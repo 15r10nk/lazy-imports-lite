@@ -1,8 +1,6 @@
 import importlib
 from collections import defaultdict
-from typing import DefaultDict
-from typing import List
-from typing import Set
+from typing import DefaultDict, List, Set
 
 
 class LazyObject:

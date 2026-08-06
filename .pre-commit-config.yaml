@@ -5,10 +5,15 @@ ci:
   autoupdate_schedule: monthly
 
 repos:
+
+- repo: https://github.com/15r10nk/project-template
+  rev: v0.3.2
+  hooks:
+  - id: copier-enforce
+
+
 - hooks:
-  - id: check-yaml
   - id: check-ast
-  - id: check-docstring-first
   - id: check-merge-conflict
   - id: trailing-whitespace
   - id: mixed-line-ending
@@ -33,12 +38,12 @@ repos:
   hooks:
   - id: setup-cfg-fmt
 
-- repo: https://github.com/asottile/reorder-python-imports
-  rev: v3.15.0
+- repo: https://github.com/pycqa/isort
+  rev: 6.0.1
   hooks:
-  - args:
-    - --py38-plus
-    id: reorder-python-imports
+  - id: isort
+    name: isort (python)
+
 - hooks:
   - args:
     - --py38-plus
@@ -51,26 +56,47 @@ repos:
   rev: 25.1.0
 - hooks:
   - id: blacken-docs
-  repo: https://github.com/asottile/blacken-docs
+    args: [-l80]
+  repo: https://github.com/adamchainz/blacken-docs
   rev: 1.19.1
 
+
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.14.0
+  rev: v2.15.0
   hooks:
   - id: pretty-format-yaml
     args: [--autofix, --indent, '2']
-      #  - id: pretty-format-toml
-      #    args: [--autofix]
 
 - hooks:
   - id: commitizen
     stages:
     - commit-msg
   repo: https://github.com/commitizen-tools/commitizen
-  rev: v4.8.2
+  rev: v4.8.3
 
 
-- repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.5.5
+# - repo: https://github.com/PyCQA/docformatter
+#   rev: v1.7.5
+#   hooks:
+#   - id: docformatter
+
+- repo: https://github.com/abravalheri/validate-pyproject
+  rev: v0.24.1
   hooks:
-  - id: remove-crlf
+  - id: validate-pyproject
+
+- repo: https://github.com/henryiii/validate-pyproject-schema-store
+  rev: 2025.04.28
+  hooks:
+  - id: validate-pyproject
+
+
+- repo: https://github.com/rhysd/actionlint
+  rev: v1.7.7
+  hooks:
+  - id: actionlint
+
+- repo: https://github.com/crate-ci/typos
+  rev: v1.47.0
+  hooks:
+  - id: typos

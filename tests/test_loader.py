@@ -5,8 +5,7 @@ import subprocess
 import subprocess as sp
 import sys
 import typing
-from contextlib import contextmanager
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
