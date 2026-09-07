@@ -22,10 +22,8 @@ test()
     """,
         transformed_stdout=snapshot("<equal to normal>"),
         transformed_stderr=snapshot("<equal to normal>"),
-        normal_stdout=snapshot(
-            """\
+        normal_stdout=snapshot("""\
 some text
-"""
-        ),
+"""),
         normal_stderr=snapshot(""),
     )
