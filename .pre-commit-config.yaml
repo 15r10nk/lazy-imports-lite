@@ -17,7 +17,7 @@ repos:
   - id: check-json
   - id: end-of-file-fixer
   repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
 - hooks:
   - args:
     - --in-place
@@ -26,15 +26,15 @@ repos:
     - --ignore-init-module-imports
     id: autoflake
   repo: https://github.com/myint/autoflake
-  rev: v2.3.1
+  rev: v2.4.0
 
 - repo: https://github.com/asottile/setup-cfg-fmt
-  rev: v2.8.0
+  rev: v3.2.0
   hooks:
   - id: setup-cfg-fmt
 
 - repo: https://github.com/asottile/reorder-python-imports
-  rev: v3.15.0
+  rev: v3.17.0
   hooks:
   - args:
     - --py38-plus
@@ -44,18 +44,18 @@ repos:
     - --py38-plus
     id: pyupgrade
   repo: https://github.com/asottile/pyupgrade
-  rev: v3.20.0
+  rev: v3.21.2
 - hooks:
   - id: black
   repo: https://github.com/psf/black
-  rev: 25.1.0
+  rev: 26.5.1
 - hooks:
   - id: blacken-docs
   repo: https://github.com/asottile/blacken-docs
-  rev: 1.19.1
+  rev: 1.20.0
 
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.14.0
+  rev: v2.16.0
   hooks:
   - id: pretty-format-yaml
     args: [--autofix, --indent, '2']
@@ -67,10 +67,10 @@ repos:
     stages:
     - commit-msg
   repo: https://github.com/commitizen-tools/commitizen
-  rev: v4.8.2
+  rev: v4.18.0
 
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.5.5
+  rev: v1.5.6
   hooks:
   - id: remove-crlf
